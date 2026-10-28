@@ -8,6 +8,7 @@ import { Card, DemoNotice, DetailList, InlineAlert, NeedsClarification, PageHead
 import { useAdmin } from "@/components/admin/use-admin";
 import { Button } from "@/components/ui/button";
 import { Dialog, SheetContent } from "@/components/ui/dialog";
+import { istDay, presetRange } from "@/lib/dates";
 import { formatDate, formatDateTime, formatINR } from "@/lib/format";
 import { reconcileSettlement } from "@/lib/mock/actions";
 import { byId, subOrderTotal, unsettledDeliveredSubOrders } from "@/lib/mock/selectors";
@@ -25,7 +26,20 @@ export function SettlementsView() {
   const [recon, setRecon] = React.useState("");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selected = byId(db.settlements, selectedId);
-  const unsettled = unsettledDeliveredSubOrders(db);
+  const [uSeller, setUSeller] = React.useState("");
+  const [uRefunds, setURefunds] = React.useState("");
+  const [uDelivered, setUDelivered] = React.useState("");
+  const unsettledAll = unsettledDeliveredSubOrders(db);
+  const weekAgo = presetRange("7d").from;
+  const unsettled = unsettledAll.filter((s) => {
+    const refunds = db.refunds.some((r) => r.subOrderId === s.id);
+    if (uRefunds === "with" && !refunds) return false;
+    if (uRefunds === "none" && refunds) return false;
+    const day = s.deliveredAt ? istDay(s.deliveredAt) : "";
+    if (uDelivered === "recent" && day < weekAgo) return false;
+    if (uDelivered === "older" && day >= weekAgo) return false;
+    return !uSeller || s.sellerId === uSeller;
+  });
 
   const rows = db.settlements.filter((b) => (!status || b.status === status) && (!seller || b.sellerId === seller) && (!recon || b.reconciliation === recon) && matchesSearch(query, [b.id, b.payoutReference, byId(db.sellers, b.sellerId)?.businessName]));
 
@@ -80,11 +94,17 @@ export function SettlementsView() {
         <p className="mt-3 text-xs text-muted-foreground">“Sub-order value” is the sum of the batch&apos;s sub-order line items. It is not the payout amount, which depends on commission and refund deductions that are not specified.</p>
       </Card>
 
-      <Card className="mt-6" title="Delivered sub-orders not in any batch" description={`${unsettled.length} sub-order(s)`}>
+      <Card className="mt-6" title="Delivered sub-orders not in any batch" description={`${unsettledAll.length} sub-order(s)`}>
         <div className="mb-4">
           <NeedsClarification refId="Q-SETTLEMENT-ELIGIBILITY">The eligible balance, payout schedule, holding period and refund/commission deductions are not specified. This list is factual (delivered and not yet batched) and is not an eligibility decision.</NeedsClarification>
         </div>
-        <DataTable caption="Delivered sub-orders not yet settled" rows={unsettled} columns={unsettledColumns} getRowId={(s) => s.id} initialSort={{ key: "delivered", direction: "asc" }} pageSize={8} emptyTitle="Nothing outstanding" emptyDescription="Every delivered sub-order is in a settlement batch." />
+        <Toolbar>
+          <FilterSelect label="Seller" value={uSeller} onChange={setUSeller} options={db.sellers.filter((s) => unsettledAll.some((x) => x.sellerId === s.id)).map((s) => ({ value: s.id, label: s.businessName }))} />
+          <FilterSelect label="Refund requests" value={uRefunds} onChange={setURefunds} options={[{ value: "with", label: "Has refund records" }, { value: "none", label: "No refund records" }]} allLabel="Any" />
+          <FilterSelect label="Delivered" value={uDelivered} onChange={setUDelivered} options={[{ value: "recent", label: "In the last 7 days" }, { value: "older", label: "More than 7 days ago" }]} allLabel="Any time" />
+          <ClearFilters active={Boolean(uSeller || uRefunds || uDelivered)} onClear={() => { setUSeller(""); setURefunds(""); setUDelivered(""); }} />
+        </Toolbar>
+        <DataTable caption="Delivered sub-orders not yet settled" resetKey={`${uSeller}|${uRefunds}|${uDelivered}`} rows={unsettled} columns={unsettledColumns} getRowId={(s) => s.id} initialSort={{ key: "delivered", direction: "asc" }} pageSize={8} emptyTitle={unsettledAll.length ? "No records match" : "Nothing outstanding"} emptyDescription={unsettledAll.length ? "Try different filters." : "Every delivered sub-order is in a settlement batch."} />
       </Card>
 
       <Dialog open={Boolean(selected)} onOpenChange={(o) => !o && setSelectedId(null)}>

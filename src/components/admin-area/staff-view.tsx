@@ -3,12 +3,13 @@
 import * as React from "react";
 import { Check } from "lucide-react";
 import { DataTable, type Column } from "@/components/admin/data-table";
-import { FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
+import { ClearFilters, FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
 import { Card, DemoNotice, NeedsClarification, PageHeader, StatusBadge } from "@/components/admin/primitives";
 import { useAdmin } from "@/components/admin/use-admin";
 import { NAV_GROUPS } from "@/components/shell/nav";
 import { NativeSelect } from "@/components/ui/input";
 import { useSession } from "@/lib/auth/session";
+import { istDay, presetRange } from "@/lib/dates";
 import { formatDateTime } from "@/lib/format";
 import { changeStaffRole } from "@/lib/mock/actions";
 import { statusMeta, statusOptions } from "@/lib/status";
@@ -21,7 +22,16 @@ export function StaffView() {
   const me = session.status === "signed_in" ? session.session.staffId : null;
   const [query, setQuery] = React.useState("");
   const [role, setRole] = React.useState("");
-  const rows = db.staff.filter((s) => (!role || s.role === role) && matchesSearch(query, [s.name, s.email]));
+  const [status, setStatus] = React.useState("");
+  const [activity, setActivity] = React.useState("");
+  const weekAgo = presetRange("7d").from;
+  const rows = db.staff.filter(
+    (s) =>
+      (!role || s.role === role) &&
+      (!status || s.status === status) &&
+      (!activity || (activity === "recent" ? istDay(s.lastActiveAt) >= weekAgo : istDay(s.lastActiveAt) < weekAgo)) &&
+      matchesSearch(query, [s.name, s.email]),
+  );
 
   const changeRole = (s: StaffMember, next: StaffRole) =>
     confirm({
@@ -54,8 +64,11 @@ export function StaffView() {
         <Toolbar>
           <SearchField label="Search staff" placeholder="Name or email" value={query} onChange={setQuery} />
           <FilterSelect label="Role" value={role} onChange={setRole} options={statusOptions("role")} />
+          <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("staff")} />
+          <FilterSelect label="Last active" value={activity} onChange={setActivity} options={[{ value: "recent", label: "In the last 7 days" }, { value: "older", label: "More than 7 days ago" }]} allLabel="Any time" />
+          <ClearFilters active={Boolean(query || role || status || activity)} onClear={() => { setQuery(""); setRole(""); setStatus(""); setActivity(""); }} />
         </Toolbar>
-        <DataTable caption="Staff members" rows={rows} columns={columns} getRowId={(s) => s.id} initialSort={{ key: "name", direction: "asc" }} resetKey={`${query}|${role}`} minWidth={720} />
+        <DataTable caption="Staff members" rows={rows} columns={columns} getRowId={(s) => s.id} initialSort={{ key: "name", direction: "asc" }} resetKey={`${query}|${role}|${status}|${activity}`} minWidth={720} />
         <p className="mt-3 text-xs text-muted-foreground">Inviting, deactivating or removing staff is not offered: those workflows are not specified. You cannot change your own role.</p>
       </Card>
 
@@ -66,7 +79,7 @@ export function StaffView() {
         <div className="scrollbar-thin relative overflow-x-auto rounded-xl border border-border" role="region" aria-label="Permission matrix" tabIndex={0}>
           <table className="w-full min-w-[560px] text-sm">
             <caption className="sr-only">Access by role for each admin area</caption>
-            <thead className="bg-secondary/70 text-left text-xs text-muted-foreground uppercase">
+            <thead className="bg-secondary/70 text-left text-[13px] font-semibold text-muted-foreground">
               <tr><th scope="col" className="px-3.5 py-2.5">Area</th><th scope="col" className="px-3.5 py-2.5">Super Admin</th><th scope="col" className="px-3.5 py-2.5">Admin</th></tr>
             </thead>
             <tbody className="divide-y divide-border">

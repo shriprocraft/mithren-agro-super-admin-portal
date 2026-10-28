@@ -25,7 +25,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-3xl border border-border bg-popover p-5 text-sm text-popover-foreground shadow-overlay outline-none sm:p-6",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto scrollbar-subtle rounded-3xl border border-border bg-popover p-5 text-sm text-popover-foreground shadow-overlay outline-none sm:p-6",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           className,
         )}
@@ -80,7 +80,7 @@ function SheetContent({ className, children, title, description, ...props }: Rea
             <span className="sr-only">Close panel</span>
           </DialogPrimitive.Close>
         </div>
-        <div className="scrollbar-thin flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
+        <div className="scrollbar-subtle flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   );

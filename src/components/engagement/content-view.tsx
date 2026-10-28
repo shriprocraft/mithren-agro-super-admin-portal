@@ -137,8 +137,8 @@ function PolicyEditor({ policy, onSave, onCancel }: { policy: PolicyPage; onSave
         </article>
       ) : (
         <div className="grid gap-4">
-          <Field label="Title" required><Input value={title} onChange={(e) => { setTitle(e.target.value); setError(null); }} maxLength={100} /></Field>
-          <Field label="Body" required><Textarea value={body} onChange={(e) => { setBody(e.target.value); setError(null); }} className="min-h-56" /></Field>
+          <Field label="Title" required><Input value={title} onChange={(e) => { setTitle(e.target.value); setError(null); }} maxLength={100} placeholder="e.g. Shipping Policy" /></Field>
+          <Field label="Body" required><Textarea value={body} onChange={(e) => { setBody(e.target.value); setError(null); }} className="min-h-56" placeholder="Write the policy text. Leave a blank line between paragraphs." /></Field>
         </div>
       )}
       {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
@@ -192,8 +192,8 @@ function FaqForm({ faq, onSave, onCancel }: { faq: Faq | null; onSave: (input: {
     <DialogContent>
       <form onSubmit={submit} noValidate className="grid gap-4">
         <DialogHeader><DialogTitle>{faq ? "Edit FAQ" : "Add FAQ"}</DialogTitle><DialogDescription>Local draft only.</DialogDescription></DialogHeader>
-        <Field label="Question" required error={errors.q}><Input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={160} /></Field>
-        <Field label="Answer" required error={errors.a}><Textarea value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={800} /></Field>
+        <Field label="Question" required error={errors.q}><Input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={160} placeholder="e.g. How do I change my delivery slot?" /></Field>
+        <Field label="Answer" required error={errors.a}><Textarea value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={800} placeholder="A short, clear answer (up to 800 characters)" /></Field>
         {errors.form && <p role="alert" className="text-sm font-medium text-destructive">{errors.form}</p>}
         <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button type="submit">Save FAQ</Button></DialogFooter>
       </form>
@@ -223,10 +223,10 @@ function ContactTab() {
   return (
     <Card title="Contact details" description="Shown on the storefront contact page (local draft).">
       <form onSubmit={submit} noValidate className="grid max-w-2xl gap-4 sm:grid-cols-2">
-        <Field label="Support email" required error={errors.email}><Input type="email" value={form.email} onChange={set("email")} /></Field>
-        <Field label="Support phone" required error={errors.phone}><Input type="tel" value={form.phone} onChange={set("phone")} /></Field>
-        <Field label="Address" required error={errors.address} className="sm:col-span-2"><Textarea value={form.address} onChange={set("address")} className="min-h-16" /></Field>
-        <Field label="Support hours" required error={errors.hours} className="sm:col-span-2"><Input value={form.hours} onChange={set("hours")} /></Field>
+        <Field label="Support email" required error={errors.email}><Input type="email" value={form.email} onChange={set("email")} placeholder="support@yourdomain.com" /></Field>
+        <Field label="Support phone" required error={errors.phone}><Input type="tel" value={form.phone} onChange={set("phone")} placeholder="+91 98765 43210" /></Field>
+        <Field label="Address" required error={errors.address} className="sm:col-span-2"><Textarea value={form.address} onChange={set("address")} className="min-h-16" placeholder="Street, area, city and PIN code" /></Field>
+        <Field label="Support hours" required error={errors.hours} className="sm:col-span-2"><Input value={form.hours} onChange={set("hours")} placeholder="e.g. Mon–Sat, 08:00–20:00 IST" /></Field>
         {formError && <div className="sm:col-span-2"><InlineAlert tone="danger">{formError}</InlineAlert></div>}
         <div className="sm:col-span-2"><Button type="submit">Save contact details</Button></div>
       </form>
@@ -280,10 +280,10 @@ function AnnouncementForm({ item, onSave, onCancel }: { item: Announcement | nul
     <DialogContent>
       <form onSubmit={submit} noValidate className="grid gap-4">
         <DialogHeader><DialogTitle>{item ? "Edit announcement" : "New announcement"}</DialogTitle><DialogDescription>Local draft only; not shown on the storefront.</DialogDescription></DialogHeader>
-        <Field label="Message" required error={errors.message} hint={`${message.trim().length}/160`}><Textarea value={message} onChange={(e) => setMessage(e.target.value)} className="min-h-16" /></Field>
+        <Field label="Message" required error={errors.message} hint={`${message.trim().length}/160`}><Textarea value={message} onChange={(e) => setMessage(e.target.value)} className="min-h-16" placeholder="e.g. Orders placed after 6 PM are delivered the next day." /></Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Starts" required error={errors.dates}><Input type="date" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} /></Field>
-          <Field label="Ends" required><Input type="date" value={endsAt} min={startsAt || undefined} onChange={(e) => setEndsAt(e.target.value)} /></Field>
+          <Field label="Starts" required error={errors.dates} hint="DD/MM/YYYY"><Input type="date" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} /></Field>
+          <Field label="Ends" required hint="On or after the start date"><Input type="date" value={endsAt} min={startsAt || undefined} onChange={(e) => setEndsAt(e.target.value)} /></Field>
         </div>
         {errors.form && <p role="alert" className="text-sm font-medium text-destructive">{errors.form}</p>}
         <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button type="submit">Save announcement</Button></DialogFooter>

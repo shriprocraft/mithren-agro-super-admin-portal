@@ -147,7 +147,7 @@ function ProductDetail({ db, product, run, confirm }: { db: DemoDb; product: Pro
         <div className="relative overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[420px] text-sm">
             <caption className="sr-only">Variants</caption>
-            <thead className="bg-secondary/70 text-left text-xs text-muted-foreground uppercase">
+            <thead className="bg-secondary/70 text-left text-[13px] font-semibold text-muted-foreground">
               <tr><th scope="col" className="px-3 py-2">Variant</th><th scope="col" className="px-3 py-2">SKU</th><th scope="col" className="px-3 py-2 text-right">Price</th><th scope="col" className="px-3 py-2 text-right">Stock</th></tr>
             </thead>
             <tbody className="divide-y divide-border">

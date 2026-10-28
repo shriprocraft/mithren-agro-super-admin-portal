@@ -78,7 +78,7 @@ export function DataTable<T>({
                     key={column.key}
                     scope="col"
                     aria-sort={ariaSort}
-                    className={cn("px-3.5 py-2.5 text-xs font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase", column.align === "right" && "text-right", column.className)}
+                    className={cn("px-3.5 py-3 text-[13px] font-semibold whitespace-nowrap text-muted-foreground", column.align === "right" && "text-right", column.className)}
                   >
                     {column.srOnlyHeader ? (
                       <span className="sr-only">{column.header}</span>
@@ -86,7 +86,7 @@ export function DataTable<T>({
                       <button
                         type="button"
                         onClick={() => toggleSort(column.key)}
-                        className={cn("-mx-1.5 inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 uppercase hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", active && "text-foreground")}
+                        className={cn("-mx-1.5 inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", active && "text-foreground")}
                       >
                         {column.header}
                         {active ? sort.direction === "asc" ? <ArrowUp className="size-3.5" aria-hidden="true" /> : <ArrowDown className="size-3.5" aria-hidden="true" /> : <ArrowUpDown className="size-3.5 opacity-50" aria-hidden="true" />}

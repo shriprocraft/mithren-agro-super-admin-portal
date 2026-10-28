@@ -94,6 +94,9 @@ e2e/                           Playwright browser tests
 
 ## UI patterns
 
+- **Dropdowns**: filters, the report picker and the date range use the branded Radix `Select`
+  (`components/ui/select.tsx`); the custom date range is a Radix `Popover` anchored to it. Short
+  selects inside dialog forms stay native.
 - **Lists** use `DataTable` (sortable headers with `aria-sort`, pagination that returns to page 1 when
   filters change, horizontal scroll inside a labelled region on small screens). Search and filtering
   run in the page before rows reach the table.

@@ -130,7 +130,9 @@ export function ProductsView({ mode }: { mode: "all" | "approvals" }) {
 function ReportsTab({ onOpen }: { onOpen: (id: string) => void }) {
   const { db, run, confirm, confirmDialog } = useAdmin();
   const [status, setStatus] = React.useState("open");
-  const rows = db.productReports.filter((r) => !status || r.status === status);
+  const [product, setProduct] = React.useState("");
+  const [seller, setSeller] = React.useState("");
+  const rows = db.productReports.filter((r) => (!status || r.status === status) && (!product || r.productId === product) && (!seller || byId(db.products, r.productId)?.sellerId === seller));
   const close = (r: ProductReport, next: "resolved" | "dismissed") =>
     confirm({
       title: `${next === "resolved" ? "Resolve" : "Dismiss"} report ${r.id}?`,
@@ -156,8 +158,13 @@ function ReportsTab({ onOpen }: { onOpen: (id: string) => void }) {
   ];
   return (
     <Card title="Product reports" description="Reports raised by customers about listings.">
-      <Toolbar><FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("report").filter((o) => o.value !== "actioned")} /></Toolbar>
-      <DataTable caption="Product reports" rows={rows} columns={columns} getRowId={(r) => r.id} initialSort={{ key: "reported", direction: "desc" }} resetKey={status} emptyTitle="No reports" emptyDescription="No product reports match this filter." />
+      <Toolbar>
+        <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("report").filter((o) => o.value !== "actioned")} />
+        <FilterSelect label="Product" value={product} onChange={setProduct} options={db.products.filter((p) => db.productReports.some((r) => r.productId === p.id)).map((p) => ({ value: p.id, label: p.name }))} />
+        <FilterSelect label="Seller" value={seller} onChange={setSeller} options={db.sellers.filter((s) => db.products.some((p) => p.sellerId === s.id)).map((s) => ({ value: s.id, label: s.businessName }))} />
+        <ClearFilters active={Boolean(product || seller || status !== "open")} onClear={() => { setStatus("open"); setProduct(""); setSeller(""); }} />
+      </Toolbar>
+      <DataTable caption="Product reports" rows={rows} columns={columns} getRowId={(r) => r.id} initialSort={{ key: "reported", direction: "desc" }} resetKey={`${status}|${product}|${seller}`} emptyTitle="No reports" emptyDescription="No product reports match this filter." />
       {confirmDialog}
     </Card>
   );
@@ -166,7 +173,16 @@ function ReportsTab({ onOpen }: { onOpen: (id: string) => void }) {
 function AlertsTab({ onOpen }: { onOpen: (id: string) => void }) {
   const { db, act } = useAdmin();
   const [status, setStatus] = React.useState("open");
-  const rows = db.inventoryAlerts.filter((a) => !status || a.status === status);
+  const [seller, setSeller] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [stock, setStock] = React.useState("");
+  const rows = db.inventoryAlerts.filter((a) => {
+    const product = byId(db.products, a.productId);
+    const current = product?.variants.find((v) => v.id === a.variantId)?.stock ?? 0;
+    if (stock === "out" && current > 0) return false;
+    if (stock === "in" && current === 0) return false;
+    return (!status || a.status === status) && (!seller || product?.sellerId === seller) && (!category || product?.categoryId === category);
+  });
   const columns: Column<InventoryAlert>[] = [
     { key: "product", header: "Product", sortValue: (a) => byId(db.products, a.productId)?.name, cell: (a) => <RowLink onClick={() => onOpen(a.productId)} sub={byId(db.sellers, byId(db.products, a.productId)?.sellerId)?.businessName}>{byId(db.products, a.productId)?.name}</RowLink> },
     { key: "variant", header: "Variant", cell: (a) => byId(db.products, a.productId)?.variants.find((v) => v.id === a.variantId)?.label },
@@ -179,8 +195,14 @@ function AlertsTab({ onOpen }: { onOpen: (id: string) => void }) {
   return (
     <Card title="Low-stock alerts" description="Alerts as raised by the (mock) inventory feed.">
       <div className="mb-4"><NeedsClarification refId="Q-STOCK">The stock threshold that raises a low-stock alert is not specified, so this demo shows the alerts recorded in the fixtures instead of calculating its own.</NeedsClarification></div>
-      <Toolbar><FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("alert")} /></Toolbar>
-      <DataTable caption="Low-stock alerts" rows={rows} columns={columns} getRowId={(a) => a.id} initialSort={{ key: "raised", direction: "asc" }} resetKey={status} emptyTitle="No alerts" emptyDescription="No low-stock alerts match this filter." />
+      <Toolbar>
+        <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("alert")} />
+        <FilterSelect label="Seller" value={seller} onChange={setSeller} options={db.sellers.filter((s) => db.products.some((p) => p.sellerId === s.id)).map((s) => ({ value: s.id, label: s.businessName }))} />
+        <FilterSelect label="Category" value={category} onChange={setCategory} options={db.categories.map((c) => ({ value: c.id, label: c.name }))} />
+        <FilterSelect label="Current stock" value={stock} onChange={setStock} options={[{ value: "out", label: "Out of stock" }, { value: "in", label: "Still in stock" }]} allLabel="Any" />
+        <ClearFilters active={Boolean(seller || category || stock || status !== "open")} onClear={() => { setStatus("open"); setSeller(""); setCategory(""); setStock(""); }} />
+      </Toolbar>
+      <DataTable caption="Low-stock alerts" rows={rows} columns={columns} getRowId={(a) => a.id} initialSort={{ key: "raised", direction: "asc" }} resetKey={`${status}|${seller}|${category}|${stock}`} emptyTitle="No alerts" emptyDescription="No low-stock alerts match this filter." />
     </Card>
   );
 }

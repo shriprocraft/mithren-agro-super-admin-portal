@@ -2,10 +2,9 @@
 
 import * as React from "react";
 import { DataTable, type Column } from "@/components/admin/data-table";
-import { Field } from "@/components/admin/field";
+import { FilterSelect } from "@/components/admin/filters";
 import { Card, DemoNotice, NeedsClarification, PageHeader } from "@/components/admin/primitives";
 import { CsvExportButton, DateRangeFilter } from "@/components/admin/widgets";
-import { NativeSelect } from "@/components/ui/input";
 import { presetRange, type DateRange } from "@/lib/dates";
 import { formatDate, formatINR } from "@/lib/format";
 import { useDb } from "@/lib/store/demo-store";
@@ -40,11 +39,7 @@ export function ReportsView() {
       <Card>
         <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-            <Field label="Report" className="sm:w-56">
-              <NativeSelect value={reportId} onChange={(e) => setReportId(e.target.value)}>
-                {REPORTS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-              </NativeSelect>
-            </Field>
+            <FilterSelect label="Report" value={reportId} onChange={setReportId} options={REPORTS.map((r) => ({ value: r.id, label: r.label }))} allLabel={null} className="sm:w-56" />
             <DateRangeFilter value={range} onChange={setRange} />
           </div>
           {report.needsClarification ? (

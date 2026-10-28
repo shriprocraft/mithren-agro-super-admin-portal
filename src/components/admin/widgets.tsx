@@ -3,11 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { cn } from "cn";
-import { ArrowUpRight, Download, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Download, Pencil, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input, NativeSelect } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadCsv, toCsv, type CsvColumn } from "@/lib/csv";
-import { presetRange, validateRange, type DateRange, type RangePreset } from "@/lib/dates";
+import { DATA_START, presetRange, type DateRange, type RangePreset } from "@/lib/dates";
+import { formatDate } from "@/lib/format";
+import { Field } from "./field";
 import { useToast } from "./toast";
 
 export function MetricCard({ label, value, detail, icon: Icon, href, hrefLabel, children }: {
@@ -44,79 +47,146 @@ export function MetricCard({ label, value, detail, icon: Icon, href, hrefLabel, 
   );
 }
 
-const PRESETS: { value: RangePreset; label: string }[] = [
+const PRESETS: { value: Exclude<RangePreset, "custom">; label: string }[] = [
   { value: "7d", label: "Last 7 days" },
   { value: "30d", label: "Last 30 days" },
   { value: "90d", label: "Last 90 days" },
   { value: "all", label: "All demo data" },
-  { value: "custom", label: "Custom range" },
 ];
 
-/**
- * Date-range filter. Presets count back from the fixed demo reference date. Custom ranges are only
- * applied when valid; an invalid range shows an inline error and keeps the previous range.
- */
-export function DateRangeFilter({ value, onChange, className }: { value: DateRange; onChange: (range: DateRange) => void; className?: string }) {
-  const [preset, setPreset] = React.useState<RangePreset>(() => PRESETS.find((p) => p.value !== "custom" && JSON.stringify(presetRange(p.value as Exclude<RangePreset, "custom">)) === JSON.stringify(value))?.value ?? "custom");
-  const [draft, setDraft] = React.useState<DateRange>(value);
-  const [error, setError] = React.useState<string | null>(null);
-  const id = React.useId();
+/** "29 Sept – 28 Oct 2026" (year shown once when both dates share it), so the trigger never truncates. */
+function compactRange(range: DateRange): string {
+  const sameYear = range.from.slice(0, 4) === range.to.slice(0, 4);
+  return `${sameYear ? formatDate(range.from).replace(/ \d{4}$/, "") : formatDate(range.from)} – ${formatDate(range.to)}`;
+}
+const sameRange = (a: DateRange, b: DateRange) => a.from === b.from && a.to === b.to;
+const isRealDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().startsWith(v);
 
-  const choosePreset = (next: RangePreset) => {
-    setPreset(next);
-    setError(null);
-    if (next !== "custom") {
-      const range = presetRange(next);
-      setDraft(range);
-      onChange(range);
+/**
+ * Branded date-range selector. Presets count back from the fixed demo reference date. "Custom range"
+ * opens a popover with Start/End dates; the range is only applied after validation, so an invalid
+ * entry never changes the data on screen.
+ */
+export function DateRangeFilter({ value, onChange, className, label = "Date range" }: { value: DateRange; onChange: (range: DateRange) => void; className?: string; label?: string }) {
+  const toast = useToast();
+  const id = React.useId();
+  const [preset, setPreset] = React.useState<RangePreset>(() => PRESETS.find((p) => sameRange(presetRange(p.value), value))?.value ?? "custom");
+  const [customOpen, setCustomOpen] = React.useState(false);
+  const openingCustom = React.useRef(false);
+
+  const choose = (next: string) => {
+    if (next === "custom") {
+      // Let the menu finish closing before the popover takes focus.
+      openingCustom.current = true;
+      requestAnimationFrame(() => setCustomOpen(true));
+      return;
     }
-  };
-  const applyCustom = (next: DateRange) => {
-    setDraft(next);
-    const problem = validateRange(next);
-    setError(problem);
-    if (!problem) onChange(next);
+    const p = next as Exclude<RangePreset, "custom">;
+    setPreset(p);
+    onChange(presetRange(p));
   };
 
   return (
-    <fieldset className={cn("flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end", className)}>
-      <legend className="sr-only">Date range</legend>
-      <div className="flex flex-col gap-1.5 sm:w-44">
-        <label htmlFor={`${id}-preset`} className="text-xs font-medium text-muted-foreground">
-          Date range
-        </label>
-        <NativeSelect id={`${id}-preset`} value={preset} onChange={(e) => choosePreset(e.target.value as RangePreset)}>
-          {PRESETS.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
-          ))}
-        </NativeSelect>
-      </div>
-      {preset === "custom" && (
-        <>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-from`} className="text-xs font-medium text-muted-foreground">
-              From
-            </label>
-            <Input id={`${id}-from`} type="date" value={draft.from} max={draft.to || undefined} onChange={(e) => applyCustom({ ...draft, from: e.target.value })} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} className="sm:w-44" />
+    <div className={cn("flex w-full min-w-0 flex-col gap-1.5 sm:w-64", className)}>
+      <span id={`${id}-label`} className="text-[13px] font-medium text-muted-foreground">
+        {label}
+      </span>
+      <Popover open={customOpen} onOpenChange={setCustomOpen}>
+        <PopoverAnchor asChild>
+          <div className="flex items-center gap-2">
+            <Select value={preset} onValueChange={choose}>
+              <SelectTrigger aria-labelledby={`${id}-label`} className="flex-1">
+                <CalendarDays className="size-4 text-primary" aria-hidden="true" />
+                <SelectValue>{preset === "custom" ? compactRange(value) : undefined}</SelectValue>
+              </SelectTrigger>
+              <SelectContent
+                onCloseAutoFocus={(e) => {
+                  if (openingCustom.current) {
+                    e.preventDefault();
+                    openingCustom.current = false;
+                  }
+                }}
+              >
+                {PRESETS.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+                <SelectSeparator />
+                <SelectItem value="custom">Custom range…</SelectItem>
+              </SelectContent>
+            </Select>
+            {preset === "custom" && (
+              // A real PopoverTrigger: Radix never treats its own trigger as an outside click, so
+              // reopening works even while the previous panel is still animating closed.
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Edit custom date range">
+                  <Pencil aria-hidden="true" />
+                </Button>
+              </PopoverTrigger>
+            )}
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-to`} className="text-xs font-medium text-muted-foreground">
-              To
-            </label>
-            <Input id={`${id}-to`} type="date" value={draft.to} min={draft.from || undefined} onChange={(e) => applyCustom({ ...draft, to: e.target.value })} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} className="sm:w-44" />
-          </div>
-        </>
-      )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-xs font-medium text-destructive sm:basis-full">
-          {error} Showing the previous valid range.
-        </p>
-      )}
-    </fieldset>
+        </PopoverAnchor>
+        <PopoverContent aria-label="Custom date range">
+          {customOpen && (
+            <CustomRangeForm
+              initial={value}
+              onCancel={() => setCustomOpen(false)}
+              onApply={(range) => {
+                setPreset("custom");
+                onChange(range);
+                setCustomOpen(false);
+                toast.success(`Date range applied: ${formatDate(range.from)} – ${formatDate(range.to)}.`);
+              }}
+            />
+          )}
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
+
+function CustomRangeForm({ initial, onApply, onCancel }: { initial: DateRange; onApply: (range: DateRange) => void; onCancel: () => void }) {
+  const [from, setFrom] = React.useState(initial.from);
+  const [to, setTo] = React.useState(initial.to);
+  const [errors, setErrors] = React.useState<{ from?: string; to?: string }>({});
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const next: { from?: string; to?: string } = {
+      from: !from ? "Choose a start date." : !isRealDate(from) ? "Enter a valid start date." : undefined,
+      to: !to ? "Choose an end date." : !isRealDate(to) ? "Enter a valid end date." : undefined,
+    };
+    if (!next.from && !next.to && to < from) next.to = "The end date must be on or after the start date.";
+    setErrors(next);
+    if (next.from || next.to) return;
+    onApply({ from, to });
+  };
+
+  return (
+    <form onSubmit={submit} noValidate className="grid gap-4">
+      <div>
+        <p className="font-semibold text-foreground">Custom date range</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">Demo data runs from {formatDate(DATA_START)} to {formatDate(presetRange("all").to)}.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Start date" required error={errors.from} hint="DD/MM/YYYY">
+          <Input type="date" value={from} max={to || undefined} onChange={(e) => { setFrom(e.target.value); setErrors((er) => ({ ...er, from: undefined })); }} />
+        </Field>
+        <Field label="End date" required error={errors.to} hint="On or after the start date">
+          <Input type="date" value={to} min={from || undefined} onChange={(e) => { setTo(e.target.value); setErrors((er) => ({ ...er, to: undefined })); }} />
+        </Field>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">Apply range</Button>
+      </div>
+    </form>
+  );
+}
+
 
 /** Real client-side CSV download of the given rows. Disabled with an explanation when there is nothing to export. */
 export function CsvExportButton<T>({ filename, rows, columns, label = "Export CSV" }: { filename: string; rows: readonly T[]; columns: readonly CsvColumn<T>[]; label?: string }) {

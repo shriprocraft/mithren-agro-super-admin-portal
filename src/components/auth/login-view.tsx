@@ -114,6 +114,7 @@ export function LoginView() {
                   type={showPassword ? "text" : "password"}
                   name="password"
                   autoComplete="current-password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -210,6 +211,7 @@ function ForgotPasswordBody({ initialEmail, onClose }: { initialEmail: string; o
             <Input
               type="email"
               autoComplete="username"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);

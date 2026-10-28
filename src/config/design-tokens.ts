@@ -30,6 +30,31 @@ export const designTokens = {
   },
   fonts: { heading: "Poppins", body: "Poppins" },
   radii: { sm: "0.5rem", md: "0.75rem", lg: "1rem", pill: "9999px" },
+  /**
+   * Admin spacing scale (Tailwind steps, 4px base). Shared components use these; pages should not add
+   * one-off margins. Documented in docs/DESIGN_TOKENS.md → Spacing.
+   */
+  spacing: {
+    pageGutter: { mobile: "1rem", tablet: "1.5rem", desktop: "2rem" }, // px-4 / sm:px-6 / lg:px-8
+    pageTop: { mobile: "1.5rem", desktop: "2rem" }, // main py-6 / sm:py-8
+    pageHeaderBottom: "1.5rem", // PageHeader mb-6 (lg:mb-7)
+    sectionGap: "1.5rem", // between cards / sections (gap-6, mt-6)
+    cardGap: "1rem", // between metric cards (gap-4)
+    cardPadding: { mobile: "1rem", desktop: "1.25rem" }, // Card p-4 / sm:p-5
+    toolbarGap: "0.75rem", // between filter controls (gap-3)
+    fieldGap: "1rem", // between form fields (gap-4)
+    labelGap: "0.375rem", // label → control (gap-1.5)
+    controlHeight: "2.75rem", // inputs, selects, buttons (h-11); dense table buttons h-9
+    headerHeight: "4.5rem", // admin header min height
+  },
+  typography: {
+    pageTitle: "26px → 30px, semibold", // PageHeader h1
+    headerTitle: "18px, semibold", // top header title
+    cardTitle: "16px, semibold",
+    body: "14–15px, regular, line-height 1.6",
+    label: "13px, medium", // field, filter and detail labels; table headers 13px semibold
+    helper: "12px", // hints, metadata; nothing smaller than 11px (badges)
+  },
   shadows: {
     card: "0 1px 2px rgb(31 45 33 / 0.04), 0 4px 16px rgb(31 45 33 / 0.06)",
     overlay: "0 12px 40px rgb(31 45 33 / 0.14)",

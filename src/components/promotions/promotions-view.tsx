@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Pencil, Plus, Star, X } from "lucide-react";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { Field } from "@/components/admin/field";
-import { FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
+import { ClearFilters, FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
 import { Card, DemoNotice, EmptyState, NeedsClarification, PageHeader, StatusBadge } from "@/components/admin/primitives";
 import { useAdmin } from "@/components/admin/use-admin";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,10 @@ export function PromotionsView() {
   const [query, setQuery] = React.useState("");
   const [schedule, setSchedule] = React.useState("");
   const [kind, setKind] = React.useState("");
+  const [couponEnabled, setCouponEnabled] = React.useState("");
+  const [discountType, setDiscountType] = React.useState("");
+  const [limitFilter, setLimitFilter] = React.useState("");
+  const [campaignEnabled, setCampaignEnabled] = React.useState("");
 
   const toggle = (k: "coupon" | "campaign" | "banner", id: string, label: string, enabled: boolean) => {
     if (enabled) return act(setPromotionEnabled, { kind: k, id, enabled });
@@ -41,8 +45,21 @@ export function PromotionsView() {
     return result.error;
   };
 
-  const coupons = db.coupons.filter((c) => (!schedule || scheduleState(c.startsAt, c.endsAt) === schedule) && matchesSearch(query, [c.code, c.description]));
-  const campaigns = db.campaigns.filter((c) => (!kind || c.kind === kind) && (!schedule || scheduleState(c.startsAt, c.endsAt) === schedule) && matchesSearch(query, [c.name, c.description]));
+  const coupons = db.coupons.filter(
+    (c) =>
+      (!schedule || scheduleState(c.startsAt, c.endsAt) === schedule) &&
+      (!couponEnabled || String(c.enabled) === couponEnabled) &&
+      (!discountType || c.discountType === discountType) &&
+      (!limitFilter || (limitFilter === "limited" ? c.usageLimit !== null : c.usageLimit === null)) &&
+      matchesSearch(query, [c.code, c.description]),
+  );
+  const campaigns = db.campaigns.filter(
+    (c) =>
+      (!kind || c.kind === kind) &&
+      (!schedule || scheduleState(c.startsAt, c.endsAt) === schedule) &&
+      (!campaignEnabled || String(c.enabled) === campaignEnabled) &&
+      matchesSearch(query, [c.name, c.description]),
+  );
 
   const couponColumns: Column<Coupon>[] = [
     { key: "code", header: "Code", sortValue: (c) => c.code, cell: (c) => <div><code className="rounded bg-secondary px-1.5 py-0.5 text-[13px] font-semibold text-secondary-foreground">{c.code}</code><p className="mt-1 line-clamp-1 max-w-[16rem] text-xs text-muted-foreground">{c.description}</p></div> },
@@ -79,8 +96,12 @@ export function PromotionsView() {
             <Toolbar>
               <SearchField label="Search coupons" placeholder="Code or description" value={query} onChange={setQuery} />
               <FilterSelect label="Schedule" value={schedule} onChange={setSchedule} options={statusOptions("schedule")} />
+              <FilterSelect label="Enabled" value={couponEnabled} onChange={setCouponEnabled} options={statusOptions("enabled")} allLabel="Any" />
+              <FilterSelect label="Discount type" value={discountType} onChange={setDiscountType} options={[{ value: "percentage", label: "Percentage" }, { value: "flat", label: "Flat amount" }]} allLabel="Any type" />
+              <FilterSelect label="Usage limit" value={limitFilter} onChange={setLimitFilter} options={[{ value: "limited", label: "Has a limit" }, { value: "unlimited", label: "No limit" }]} allLabel="Any" />
+              <ClearFilters active={Boolean(query || schedule || couponEnabled || discountType || limitFilter)} onClear={() => { setQuery(""); setSchedule(""); setCouponEnabled(""); setDiscountType(""); setLimitFilter(""); }} />
             </Toolbar>
-            <DataTable caption="Coupons" rows={coupons} columns={couponColumns} getRowId={(c) => c.id} initialSort={{ key: "dates", direction: "desc" }} resetKey={`${query}|${schedule}`} minWidth={900} />
+            <DataTable caption="Coupons" rows={coupons} columns={couponColumns} getRowId={(c) => c.id} initialSort={{ key: "dates", direction: "desc" }} resetKey={`${query}|${schedule}|${couponEnabled}|${discountType}|${limitFilter}`} minWidth={900} />
           </Card>
           <div className="mt-4"><NeedsClarification refId="Q-COUPON-RULES">Per-customer limits, minimum order value, stacking with campaigns, eligible products/categories and whether a disabled coupon can be re-enabled after its end date are not specified.</NeedsClarification></div>
         </TabsContent>
@@ -90,8 +111,10 @@ export function PromotionsView() {
               <SearchField label="Search campaigns" placeholder="Name or description" value={query} onChange={setQuery} />
               <FilterSelect label="Type" value={kind} onChange={setKind} options={[{ value: "discount", label: "Discount" }, { value: "seasonal", label: "Seasonal" }]} />
               <FilterSelect label="Schedule" value={schedule} onChange={setSchedule} options={statusOptions("schedule")} />
+              <FilterSelect label="Enabled" value={campaignEnabled} onChange={setCampaignEnabled} options={statusOptions("enabled")} allLabel="Any" />
+              <ClearFilters active={Boolean(query || kind || schedule || campaignEnabled)} onClear={() => { setQuery(""); setKind(""); setSchedule(""); setCampaignEnabled(""); }} />
             </Toolbar>
-            <DataTable caption="Campaigns" rows={campaigns} columns={campaignColumns} getRowId={(c) => c.id} initialSort={{ key: "dates", direction: "desc" }} resetKey={`${query}|${kind}|${schedule}`} minWidth={940} />
+            <DataTable caption="Campaigns" rows={campaigns} columns={campaignColumns} getRowId={(c) => c.id} initialSort={{ key: "dates", direction: "desc" }} resetKey={`${query}|${kind}|${schedule}|${campaignEnabled}`} minWidth={940} />
           </Card>
         </TabsContent>
         <TabsContent value="featured"><FeaturedTab db={db} confirm={confirm} run={run} act={act} /></TabsContent>
@@ -214,14 +237,14 @@ function CouponForm({ coupon, onSave, onCancel }: { coupon: Coupon | null; onSav
   return (
     <FormShell title={coupon ? `Edit ${coupon.code}` : "New coupon"} onSubmit={submit} onCancel={onCancel} submitLabel={coupon ? "Save coupon" : "Create coupon"} error={formError}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Code" required error={errors.code}><Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={20} autoCapitalize="characters" /></Field>
-        <Field label="Usage limit" error={errors.limit} hint={coupon ? `${coupon.usedCount} already used.` : "Optional."}><Input inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value)} /></Field>
+        <Field label="Code" required error={errors.code}><Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={20} placeholder="e.g. FRESH50" autoCapitalize="characters" /></Field>
+        <Field label="Usage limit" error={errors.limit} hint={coupon ? `${coupon.usedCount} already used.` : "Optional."}><Input inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="e.g. 500 (empty = no limit)" /></Field>
         <Field label="Discount type" required><NativeSelect value={type} onChange={(e) => setType(e.target.value as Coupon["discountType"])}><option value="percentage">Percentage</option><option value="flat">Flat amount (₹)</option></NativeSelect></Field>
-        <Field label={type === "percentage" ? "Discount (%)" : "Discount (₹)"} required error={errors.value}><Input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} /></Field>
-        <Field label="Starts" required error={errors.dates}><Input type="date" value={dates.startsAt} onChange={(e) => dates.setStartsAt(e.target.value)} /></Field>
-        <Field label="Ends" required><Input type="date" value={dates.endsAt} min={dates.startsAt || undefined} onChange={(e) => dates.setEndsAt(e.target.value)} /></Field>
+        <Field label={type === "percentage" ? "Discount (%)" : "Discount (₹)"} required error={errors.value}><Input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} placeholder={type === "percentage" ? "1–100, e.g. 10" : "Amount in ₹, e.g. 50"} /></Field>
+        <Field label="Starts" required error={errors.dates} hint="DD/MM/YYYY"><Input type="date" value={dates.startsAt} onChange={(e) => dates.setStartsAt(e.target.value)} /></Field>
+        <Field label="Ends" required hint="On or after the start date"><Input type="date" value={dates.endsAt} min={dates.startsAt || undefined} onChange={(e) => dates.setEndsAt(e.target.value)} /></Field>
       </div>
-      <Field label="Description" hint="Optional, internal."><Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={160} className="min-h-16" /></Field>
+      <Field label="Description" hint="Optional, internal."><Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={160} className="min-h-16" placeholder="Internal note about who this coupon is for" /></Field>
     </FormShell>
   );
 }
@@ -247,16 +270,16 @@ function CampaignForm({ db, campaign, onSave, onCancel }: { db: DemoDb; campaign
   return (
     <FormShell title={campaign ? `Edit ${campaign.name}` : "New campaign"} onSubmit={submit} onCancel={onCancel} submitLabel={campaign ? "Save campaign" : "Create campaign"} error={formError}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name" required error={errors.name} className="sm:col-span-2"><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} /></Field>
+        <Field label="Name" required error={errors.name} className="sm:col-span-2"><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="e.g. Winter Fruit Festival" /></Field>
         <Field label="Type" required><NativeSelect value={kind} onChange={(e) => setKind(e.target.value as Campaign["kind"])}><option value="seasonal">Seasonal</option><option value="discount">Discount</option></NativeSelect></Field>
         <div className="hidden sm:block" />
-        <Field label="Starts" required error={errors.dates}><Input type="date" value={dates.startsAt} onChange={(e) => dates.setStartsAt(e.target.value)} /></Field>
-        <Field label="Ends" required><Input type="date" value={dates.endsAt} min={dates.startsAt || undefined} onChange={(e) => dates.setEndsAt(e.target.value)} /></Field>
+        <Field label="Starts" required error={errors.dates} hint="DD/MM/YYYY"><Input type="date" value={dates.startsAt} onChange={(e) => dates.setStartsAt(e.target.value)} /></Field>
+        <Field label="Ends" required hint="On or after the start date"><Input type="date" value={dates.endsAt} min={dates.startsAt || undefined} onChange={(e) => dates.setEndsAt(e.target.value)} /></Field>
       </div>
-      <Field label="Description" hint="Optional."><Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} className="min-h-16" /></Field>
+      <Field label="Description" hint="Optional."><Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} className="min-h-16" placeholder="What the campaign highlights (optional)" /></Field>
       <fieldset className="grid gap-2">
         <legend className="mb-1 text-sm font-medium">Products (approved only)</legend>
-        <div className="scrollbar-thin grid max-h-40 gap-1 overflow-y-auto rounded-xl border border-border p-2 sm:grid-cols-2">
+        <div className="scrollbar-subtle grid max-h-40 gap-1 overflow-y-auto rounded-xl border border-border p-2 sm:grid-cols-2">
           {products.map((p) => (
             <label key={p.id} className="flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm hover:bg-soft">
               <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={productIds.includes(p.id)} onChange={(e) => setProductIds((ids) => (e.target.checked ? [...ids, p.id] : ids.filter((i) => i !== p.id)))} />
@@ -293,16 +316,16 @@ function BannerForm({ banner, onSave, onCancel }: { banner: Banner | null; onSav
   };
   return (
     <FormShell title={banner ? `Edit ${banner.title}` : "New banner"} onSubmit={submit} onCancel={onCancel} submitLabel={banner ? "Save banner" : "Create banner"} error={formError}>
-      <Field label="Title" required error={errors.title}><Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} /></Field>
+      <Field label="Title" required error={errors.title}><Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder="e.g. Fresh pomegranates this week" /></Field>
       <Field label="Image (demo library)" required>
         <NativeSelect value={imageSrc} onChange={(e) => { const img = BANNER_IMAGES.find((i) => i.src === e.target.value); setImageSrc(e.target.value); if (img) setImageAlt(img.alt); }}>
           {BANNER_IMAGES.map((i) => <option key={i.src} value={i.src}>{i.alt}</option>)}
         </NativeSelect>
       </Field>
-      <Field label="Image description (alt text)" required error={errors.alt}><Input value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} maxLength={120} /></Field>
+      <Field label="Image description (alt text)" required error={errors.alt}><Input value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} maxLength={120} placeholder="Describe the image, e.g. Pomegranates on a white background" /></Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Starts" required error={errors.dates}><Input type="date" value={dates.startsAt} onChange={(e) => dates.setStartsAt(e.target.value)} /></Field>
-        <Field label="Ends" required><Input type="date" value={dates.endsAt} min={dates.startsAt || undefined} onChange={(e) => dates.setEndsAt(e.target.value)} /></Field>
+        <Field label="Starts" required error={errors.dates} hint="DD/MM/YYYY"><Input type="date" value={dates.startsAt} onChange={(e) => dates.setStartsAt(e.target.value)} /></Field>
+        <Field label="Ends" required hint="On or after the start date"><Input type="date" value={dates.endsAt} min={dates.startsAt || undefined} onChange={(e) => dates.setEndsAt(e.target.value)} /></Field>
       </div>
     </FormShell>
   );

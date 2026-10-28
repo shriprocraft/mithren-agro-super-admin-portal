@@ -1,5 +1,36 @@
 # Testing
 
+## UI polish round (28 Oct 2026)
+
+Run against the production build (`next build` + `next start --port 3200`) with Chrome.
+
+| Check | Result |
+|---|---|
+| `npm run lint` | ✅ 0 problems |
+| `npm run typecheck` (tsc strict) | ✅ no errors |
+| `npm test` (Vitest) | ✅ 62 / 62 |
+| `npm run build` | ✅ 26 static pages |
+| `npx playwright test` | ✅ **45 / 45** (adds `e2e/ui-polish.spec.ts` and the 1280 px overflow case) |
+
+New end-to-end coverage (`e2e/ui-polish.spec.ts`): every date-range preset updates the trigger and the
+date-filtered metrics; custom range rejects a missing start and an end before the start, Cancel keeps
+the previous range, Apply shows a success toast and changes Total orders, and Edit reopens with the
+applied dates; keyboard open, arrow, Enter and Escape on the date menu; the open menu fits a 320×640
+viewport; the sidebar badge sits below the logo; the breadcrumb sits above the header title; the page
+scrollbar is hidden (`scrollbar-width: none`) while wheel and End-key scrolling still move the page;
+all 21 panel routes have no horizontal overflow at 1280 px. Existing workflow tests were updated to
+drive the new branded dropdowns (`choose()` helper) instead of native `selectOption`.
+
+Defects found and fixed during this round: the custom-range trigger label kept the year twice (a
+regex lost its backslash during a scripted edit); clicking "Edit custom date range" while the previous
+panel was still animating closed was treated as an outside click and dismissed it (now a Radix
+`PopoverTrigger`); five metric cards in a 3-column grid left a gap; the orders toolbar squeezed the
+search field; the phone header wrapped the breadcrumb onto two lines. One run had a timing-related
+failure of the new scroll test (wheel event before the dashboard finished rendering); the test now
+waits for the page to be tall enough, and passed 3/3 repeats plus the final full run.
+
+## Initial build
+
 Final run: **28 Oct 2026**, Windows 11, Node 24.19.0, Google Chrome (Playwright `chrome` channel),
 against the production build (`next build` + `next start`).
 

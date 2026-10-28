@@ -33,12 +33,12 @@ export function StatusBadge({ domain, value, className }: { domain: StatusDomain
 
 export function PageHeader({ title, description, actions }: { title: string; description?: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <h1 className="text-[1.625rem] leading-tight font-semibold text-foreground sm:text-[1.75rem]">{title}</h1>
-        {description && <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">{description}</p>}
+    <div className="mb-6 flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-8 lg:mb-7">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-[1.625rem] leading-tight font-semibold tracking-[-0.01em] text-foreground sm:text-[1.875rem]">{title}</h1>
+        {description && <div className="mt-2.5 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">{description}</div>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
+      {actions && <div className="flex w-full shrink-0 flex-wrap items-end gap-2 md:w-auto md:justify-end">{actions}</div>}
     </div>
   );
 }
@@ -141,7 +141,7 @@ export function DetailList({ items, columns = 2 }: { items: { label: string; val
     <dl className={cn("grid gap-x-6 gap-y-3.5", columns === 2 && "sm:grid-cols-2")}>
       {items.map((item) => (
         <div key={item.label} className="min-w-0">
-          <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{item.label}</dt>
+          <dt className="text-[13px] font-medium text-muted-foreground">{item.label}</dt>
           <dd className="mt-0.5 text-sm break-words text-foreground">{item.value ?? "—"}</dd>
         </div>
       ))}

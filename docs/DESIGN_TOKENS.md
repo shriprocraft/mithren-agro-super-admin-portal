@@ -55,6 +55,45 @@ for their fills.
 | Buttons | Pill, ≥ 44px, variants default/outline/secondary/ghost/destructive/link | Same variants, plus `sm` (36px) for dense table rows and `destructive-solid` for final destructive confirmations |
 | Icons | Lucide | Lucide |
 
+## Spacing and typography scale (admin)
+
+Defined in `src/config/design-tokens.ts` (`spacing`, `typography`) and applied through the shared
+components (`PageHeader`, `Card`, `Toolbar`, `Field`, `FilterSelect`, `DataTable`, header, sidebar),
+so individual pages do not add one-off margins.
+
+| Use | Value | Where |
+|---|---|---|
+| Page gutter | 16 / 24 / 32 px (mobile / tablet / desktop) | `main` |
+| Page title → content | 24 px (28 px from lg) | `PageHeader` |
+| Between sections / cards | 24 px; metric cards 16 px | page grids |
+| Card padding | 16 px / 20 px | `Card` |
+| Filter controls | 12 px gap; label → control 6 px | `Toolbar`, `FilterSelect`, `SearchField` |
+| Form fields | 16 px gap | dialogs, forms |
+| Control height | 44 px (dense table buttons 36 px) | buttons, inputs, selects |
+| Header | ≥ 72 px; breadcrumb 13 px → title 18 px semibold, 4 px apart | `admin-shell.tsx` |
+| Sidebar brand | 24 px padding, logo 156 px wide, badge 10 px below, divider | `SidebarBrand` |
+| Page title | 26 → 30 px semibold | `PageHeader` |
+| Labels | 13 px medium (table headers 13 px semibold), sentence case | filters, fields, tables, detail lists |
+| Helper text | 12 px; nothing below 11 px | hints, metadata, badges |
+
+Uppercase is kept only for the "Super Admin" role badge and the matching login eyebrow.
+
+## Scrollbars
+
+| Surface | Treatment |
+|---|---|
+| Document (page) | Scrollbar hidden (`html { scrollbar-width: none }` + `::-webkit-scrollbar { display: none }`), as on the storefront. Wheel, trackpad, keyboard and touch scrolling are unchanged; overflow is never set to hidden. |
+| Sidebar, drawers, dialogs, menus, tab strips | `scrollbar-subtle`: thin, thumb visible only on hover/focus |
+| Wide tables (horizontal scroll) | `scrollbar-thin`: slim, always visible so extra columns stay discoverable |
+
+## Dropdowns
+
+Filters, the report picker and the date range use the branded Radix `Select` (`src/components/ui/select.tsx`,
+ported from the storefront): white pill trigger, green focus ring and open state, portalled floating
+menu (never clipped, kept inside the viewport with 12 px collision padding), `bg-soft` hover,
+`bg-secondary` + check for the selected option, keyboard and typeahead support, Escape / outside-click
+to close. Short in-dialog form selects remain native `<select>` styled like inputs.
+
 ## Administrative adaptations (not a separate brand)
 
 - The storefront's glass surfaces are not used. The admin panel uses opaque cards for dense data.

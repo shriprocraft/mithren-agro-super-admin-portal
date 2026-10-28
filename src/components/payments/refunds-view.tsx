@@ -16,16 +16,32 @@ import { statusOptions } from "@/lib/status";
 import { matchesSearch } from "@/lib/table";
 import type { Refund } from "@/lib/types";
 
+const AMOUNT_OPTIONS = [
+  { value: "small", label: "Under ₹100" },
+  { value: "medium", label: "₹100 – ₹499" },
+  { value: "large", label: "₹500 and above" },
+];
+const amountBand = (paise: number) => (paise < 10000 ? "small" : paise < 50000 ? "medium" : "large");
+
 export function RefundsView() {
   const { db, run, confirm, confirmDialog } = useAdmin();
   const params = useSearchParams();
   const [query, setQuery] = React.useState("");
   const [status, setStatus] = React.useState(params.get("status") ?? "");
   const [recon, setRecon] = React.useState("");
+  const [amount, setAmount] = React.useState("");
+  const [seller, setSeller] = React.useState("");
   const [selectedId, setSelectedId] = React.useState<string | null>(params.get("refund"));
   const selected = byId(db.refunds, selectedId);
 
-  const rows = db.refunds.filter((r) => (!status || r.status === status) && (!recon || r.reconciliation === recon) && matchesSearch(query, [r.id, r.orderId, r.subOrderId, r.demoReference, r.reason]));
+  const rows = db.refunds.filter(
+    (r) =>
+      (!status || r.status === status) &&
+      (!recon || r.reconciliation === recon) &&
+      (!amount || amountBand(r.amountPaise) === amount) &&
+      (!seller || byId(db.subOrders, r.subOrderId)?.sellerId === seller) &&
+      matchesSearch(query, [r.id, r.orderId, r.subOrderId, r.demoReference, r.reason]),
+  );
 
   const process = (r: Refund) => {
     const order = byId(db.orders, r.orderId);
@@ -81,9 +97,11 @@ export function RefundsView() {
           <SearchField label="Search refunds" placeholder="Refund, order or sub-order ID, reason" value={query} onChange={setQuery} />
           <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("refund")} />
           <FilterSelect label="Reconciliation" value={recon} onChange={setRecon} options={statusOptions("reconciliation").filter((o) => o.value !== "unreconciled")} />
-          <ClearFilters active={Boolean(query || status || recon)} onClear={() => { setQuery(""); setStatus(""); setRecon(""); }} />
+          <FilterSelect label="Amount" value={amount} onChange={setAmount} options={AMOUNT_OPTIONS} allLabel="Any amount" />
+          <FilterSelect label="Seller" value={seller} onChange={setSeller} options={db.sellers.filter((s) => db.refunds.some((r) => byId(db.subOrders, r.subOrderId)?.sellerId === s.id)).map((s) => ({ value: s.id, label: s.businessName }))} />
+          <ClearFilters active={Boolean(query || status || recon || amount || seller)} onClear={() => { setQuery(""); setStatus(""); setRecon(""); setAmount(""); setSeller(""); }} />
         </Toolbar>
-        <DataTable caption="Refunds" rows={rows} columns={columns} getRowId={(r) => r.id} initialSort={{ key: "requested", direction: "desc" }} resetKey={`${query}|${status}|${recon}`} minWidth={980} />
+        <DataTable caption="Refunds" rows={rows} columns={columns} getRowId={(r) => r.id} initialSort={{ key: "requested", direction: "desc" }} resetKey={`${query}|${status}|${recon}|${amount}|${seller}`} minWidth={980} />
       </Card>
       <div className="mt-6">
         <NeedsClarification refId="Q-REFUND-RULES">Refund eligibility, approval/rejection of requests, partial-refund limits beyond the captured amount, and timelines are not specified. The demo only processes existing refund requests and blocks refunds that exceed the captured payment.</NeedsClarification>

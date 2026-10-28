@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Pencil, Plus } from "lucide-react";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { Field } from "@/components/admin/field";
-import { FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
+import { ClearFilters, FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
 import { Card, DemoNotice, InlineAlert, NeedsClarification, PageHeader, StatusBadge } from "@/components/admin/primitives";
 import { useAdmin } from "@/components/admin/use-admin";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,20 @@ export function CategoriesView() {
   const { db, run, confirm, confirmDialog, toast } = useAdmin();
   const [query, setQuery] = React.useState("");
   const [status, setStatus] = React.useState("");
+  const [linkedFilter, setLinkedFilter] = React.useState("");
+  const [pending, setPending] = React.useState("");
   const [editing, setEditing] = React.useState<Category | "new" | null>(null);
 
   const linked = (id: string) => db.products.filter((p) => p.categoryId === id);
-  const rows = db.categories.filter((c) => (!status || c.status === status) && matchesSearch(query, [c.name, c.slug, c.description]));
+  const rows = db.categories.filter((c) => {
+    const products = linked(c.id);
+    if (linkedFilter === "with" && !products.length) return false;
+    if (linkedFilter === "none" && products.length) return false;
+    const hasPending = products.some((p) => p.approvalStatus === "pending");
+    if (pending === "yes" && !hasPending) return false;
+    if (pending === "no" && hasPending) return false;
+    return (!status || c.status === status) && matchesSearch(query, [c.name, c.slug, c.description]);
+  });
 
   const toggle = (c: Category) => {
     const products = linked(c.id);
@@ -78,8 +88,11 @@ export function CategoriesView() {
         <Toolbar>
           <SearchField label="Search categories" placeholder="Name or description" value={query} onChange={setQuery} />
           <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("category")} />
+          <FilterSelect label="Linked products" value={linkedFilter} onChange={setLinkedFilter} options={[{ value: "with", label: "Has products" }, { value: "none", label: "No products" }]} allLabel="Any" />
+          <FilterSelect label="Pending approvals" value={pending} onChange={setPending} options={[{ value: "yes", label: "Has products awaiting review" }, { value: "no", label: "None awaiting review" }]} allLabel="Any" />
+          <ClearFilters active={Boolean(query || status || linkedFilter || pending)} onClear={() => { setQuery(""); setStatus(""); setLinkedFilter(""); setPending(""); }} />
         </Toolbar>
-        <DataTable caption="Categories" rows={rows} columns={columns} getRowId={(c) => c.id} initialSort={{ key: "name", direction: "asc" }} resetKey={`${query}|${status}`} minWidth={760} />
+        <DataTable caption="Categories" rows={rows} columns={columns} getRowId={(c) => c.id} initialSort={{ key: "name", direction: "asc" }} resetKey={`${query}|${status}|${linkedFilter}|${pending}`} minWidth={760} />
       </Card>
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
         {editing !== null && (
@@ -117,8 +130,8 @@ function CategoryForm({ category, onSave, onCancel }: { category: Category | nul
           <DialogTitle>{category ? `Edit ${category.name}` : "New category"}</DialogTitle>
           <DialogDescription>Saved locally in this demo.</DialogDescription>
         </DialogHeader>
-        <Field label="Name" required error={error}><Input value={name} onChange={(e) => { setName(e.target.value); setError(null); }} maxLength={60} /></Field>
-        <Field label="Description" hint="Optional."><Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} /></Field>
+        <Field label="Name" required error={error}><Input value={name} onChange={(e) => { setName(e.target.value); setError(null); }} maxLength={60} placeholder="e.g. Leafy Greens" /></Field>
+        <Field label="Description" hint="Optional."><Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} placeholder="What belongs in this category (up to 200 characters)" /></Field>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
           <Button type="submit">{category ? "Save changes" : "Create category"}</Button>

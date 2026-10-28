@@ -39,3 +39,10 @@ export async function login(page: Page, next = "/admin") {
 
 /** Horizontal overflow of the document in CSS pixels (0 = none). */
 export const overflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+
+/** Picks an option from a branded (Radix) dropdown identified by its visible label. */
+export async function choose(page: Page, label: string, option: string) {
+  await page.getByRole("combobox", { name: label, exact: true }).click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+}

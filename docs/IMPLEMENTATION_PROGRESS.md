@@ -16,6 +16,7 @@ _Last updated: 28 Oct 2026_
 | 8. Visual refinement (1440/375 screenshot review, overflow fixes) | ✅ Done |
 | 9. Testing (lint, typecheck, 62 unit/component, build, 36 e2e) | ✅ All passing |
 | 10. Final audit and documentation | ✅ Done |
+| 11. UI polish round (scrollbars, branded dropdowns + custom date range, sidebar brand, header, page header, filters, placeholders, typography) | ✅ Done — 45/45 e2e, 62/62 unit |
 
 ## Outstanding defects
 

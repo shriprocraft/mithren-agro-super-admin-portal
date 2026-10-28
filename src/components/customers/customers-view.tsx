@@ -27,12 +27,22 @@ export function CustomersView() {
   const [query, setQuery] = React.useState("");
   const [status, setStatus] = React.useState("");
   const [city, setCity] = React.useState("");
+  const [orders, setOrders] = React.useState("");
+  const [support, setSupport] = React.useState("");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selected = db.customers.find((c) => c.id === selectedId);
   const cities = [...new Set(db.customers.map((c) => c.city))].sort();
 
   // Search uses name, id and city only: contact details are masked and not searchable.
-  const rows = db.customers.filter((c) => (!status || c.status === status) && (!city || c.city === city) && matchesSearch(query, [c.name, c.id, c.city]));
+  const rows = db.customers.filter((c) => {
+    const stats = customerStats(db, c.id);
+    if (orders === "with" && !stats.orders.length) return false;
+    if (orders === "none" && stats.orders.length) return false;
+    const openTickets = stats.tickets.filter((t) => t.status === "open" || t.status === "in_progress").length;
+    if (support === "open" && !openTickets) return false;
+    if (support === "none" && stats.tickets.length) return false;
+    return (!status || c.status === status) && (!city || c.city === city) && matchesSearch(query, [c.name, c.id, c.city]);
+  });
 
   const columns: Column<Customer>[] = [
     { key: "name", header: "Customer", sortValue: (c) => c.name, cell: (c) => <RowLink onClick={() => setSelectedId(c.id)} sub={c.id}>{c.name}</RowLink> },
@@ -69,9 +79,11 @@ export function CustomersView() {
           <SearchField label="Search customers" placeholder="Name, customer ID or city" value={query} onChange={setQuery} />
           <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions("customer")} />
           <FilterSelect label="City" value={city} onChange={setCity} options={cities.map((c) => ({ value: c, label: c }))} />
-          <ClearFilters active={Boolean(query || status || city)} onClear={() => { setQuery(""); setStatus(""); setCity(""); }} />
+          <FilterSelect label="Orders" value={orders} onChange={setOrders} options={[{ value: "with", label: "Has orders" }, { value: "none", label: "No orders yet" }]} allLabel="Any" />
+          <FilterSelect label="Support" value={support} onChange={setSupport} options={[{ value: "open", label: "Open or in-progress ticket" }, { value: "none", label: "No tickets" }]} allLabel="Any" />
+          <ClearFilters active={Boolean(query || status || city || orders || support)} onClear={() => { setQuery(""); setStatus(""); setCity(""); setOrders(""); setSupport(""); }} />
         </Toolbar>
-        <DataTable caption="Customers" rows={rows} columns={columns} getRowId={(c) => c.id} initialSort={{ key: "name", direction: "asc" }} resetKey={`${query}|${status}|${city}`} />
+        <DataTable caption="Customers" rows={rows} columns={columns} getRowId={(c) => c.id} initialSort={{ key: "name", direction: "asc" }} resetKey={`${query}|${status}|${city}|${orders}|${support}`} />
       </Card>
 
       <Dialog open={Boolean(selected)} onOpenChange={(o) => !o && setSelectedId(null)}>

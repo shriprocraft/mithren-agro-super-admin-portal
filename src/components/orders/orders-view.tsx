@@ -72,9 +72,9 @@ export function OrdersView() {
           <FilterSelect label="Order status" value={status} onChange={setStatus} options={statusOptions("order")} />
           <FilterSelect label="Payment state" value={payment} onChange={setPayment} options={statusOptions("payment")} />
           <FilterSelect label="Issues" value={issue} onChange={setIssue} options={ISSUE_OPTIONS} allLabel="Any" />
+          <DateRangeFilter value={range} onChange={setRange} />
           <ClearFilters active={Boolean(query || status || payment || issue)} onClear={() => { setQuery(""); setStatus(""); setPayment(""); setIssue(""); }} />
         </Toolbar>
-        <DateRangeFilter value={range} onChange={setRange} className="mb-4" />
         <DataTable caption="Orders" rows={rows} columns={columns} getRowId={(o) => o.id} initialSort={{ key: "placed", direction: "desc" }} resetKey={`${query}|${status}|${payment}|${issue}|${range.from}|${range.to}`} minWidth={900} />
       </Card>
       <Dialog open={Boolean(byId(db.orders, selectedId))} onOpenChange={(o) => !o && setSelectedId(null)}>

@@ -31,7 +31,12 @@ export function DashboardView() {
     <>
       <PageHeader
         title="Marketplace overview"
-        description={`Operational summary from demo fixtures. Date ranges count back from the demo reference date, ${formatDate(siteConfig.demoReferenceDate)}.`}
+        description={
+          <>
+            <p>Operational summary from demo fixtures.</p>
+            <p className="mt-1">Date ranges count back from the demo reference date, {formatDate(siteConfig.demoReferenceDate)}.</p>
+          </>
+        }
         actions={<DateRangeFilter value={range} onChange={setRange} />}
       />
       <DemoNotice>
@@ -39,7 +44,8 @@ export function DashboardView() {
       </DemoNotice>
 
       <h2 className="sr-only">Sales and orders for the selected range</h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+      {/* 3 + 2 wider cards until 2xl, then one row of five, so the five sales cards never leave a gap. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:*:col-span-2 lg:[&>*:nth-child(n+4)]:col-span-3 2xl:grid-cols-5 2xl:*:col-span-1 2xl:[&>*:nth-child(n+4)]:col-span-1">
         <MetricCard label="Total orders" icon={ShoppingCart} value={<MetricValue metric={m.totalOrders} />} detail="Parent orders placed in range" href="/admin/orders" hrefLabel="View orders" />
         <MetricCard label="Gross merchandise value (GMV)" icon={IndianRupee} value={<MetricValue metric={m.gmv} />} detail={m.gmv.status === "needs_clarification" ? m.gmv.reason : undefined} />
         <MetricCard label="Platform commission" icon={Percent} value={<MetricValue metric={m.platformCommission} />} detail={m.platformCommission.status === "needs_clarification" ? m.platformCommission.reason : undefined} href="/admin/commissions" hrefLabel="Commission setup" />
@@ -58,9 +64,9 @@ export function DashboardView() {
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <MetricCard label="Active customers" icon={Users} value={<MetricValue metric={m.activeCustomers} />} detail={m.activeCustomers.status === "value" ? m.activeCustomers.detail : undefined} href="/admin/customers" hrefLabel="Customers" />
         <MetricCard label="Active sellers" icon={Store} value={<MetricValue metric={m.activeSellers} />} detail={m.activeSellers.status === "value" ? m.activeSellers.detail : undefined} href="/admin/sellers" hrefLabel="Sellers" />
-        <MetricCard label="Pending seller approvals" icon={ClipboardCheck} value={m.pendingSellerApprovals} detail="Applications awaiting a decision" href="/admin/sellers/approvals" hrefLabel="Review applications" />
-        <MetricCard label="Pending product approvals" icon={PackageCheck} value={m.pendingProductApprovals} detail="Listings awaiting review" href="/admin/products/approvals" hrefLabel="Review products" />
-        <MetricCard label="Low-stock alerts" icon={Boxes} value={m.lowStockAlerts} detail="Open alerts from the (mock) inventory feed" href="/admin/products?view=low-stock" hrefLabel="View alerts" />
+        <MetricCard label="Pending seller approvals" icon={ClipboardCheck} value={m.pendingSellerApprovals} detail="Awaiting a decision · current count, not date-filtered" href="/admin/sellers/approvals" hrefLabel="Review applications" />
+        <MetricCard label="Pending product approvals" icon={PackageCheck} value={m.pendingProductApprovals} detail="Awaiting review · current count, not date-filtered" href="/admin/products/approvals" hrefLabel="Review products" />
+        <MetricCard label="Low-stock alerts" icon={Boxes} value={m.lowStockAlerts} detail="Open alerts from the (mock) inventory feed · current, not date-filtered" href="/admin/products?view=low-stock" hrefLabel="View alerts" />
         <MetricCard label="Delivery performance" icon={Truck} value={deliveredShare} detail="Sub-orders delivered of those placed in range. A KPI formula (e.g. on-time rate) is not specified." href="/admin/delivery" hrefLabel="Delivery setup" />
       </div>
 

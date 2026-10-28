@@ -50,9 +50,9 @@ export function AuditView() {
           <FilterSelect label="Actor" value={actor} onChange={setActor} options={actors.map(([id, name]) => ({ value: id, label: name }))} />
           <FilterSelect label="Target type" value={target} onChange={setTarget} options={targets.map((t) => ({ value: t, label: humanize(t) }))} />
           <FilterSelect label="Action" value={action} onChange={setAction} options={actions.map((a) => ({ value: a, label: a }))} />
+          <DateRangeFilter value={range} onChange={setRange} />
           <ClearFilters active={Boolean(query || actor || target || action)} onClear={() => { setQuery(""); setActor(""); setTarget(""); setAction(""); }} />
         </Toolbar>
-        <DateRangeFilter value={range} onChange={setRange} className="mb-4" />
         <DataTable caption="Audit log" rows={rows} columns={columns} getRowId={(a) => a.id} initialSort={{ key: "at", direction: "desc" }} resetKey={`${query}|${actor}|${target}|${action}|${range.from}|${range.to}`} pageSize={15} minWidth={960} />
       </Card>
       <Dialog open={Boolean(selected)} onOpenChange={(o) => !o && setSelectedId(null)}>
@@ -69,7 +69,7 @@ export function AuditView() {
                 <div className="relative overflow-x-auto rounded-xl border border-border">
                   <table className="w-full min-w-[420px] text-sm">
                     <caption className="sr-only">Changed fields</caption>
-                    <thead className="bg-secondary/70 text-left text-xs text-muted-foreground uppercase"><tr><th scope="col" className="px-3 py-2">Field</th><th scope="col" className="px-3 py-2">Before</th><th scope="col" className="px-3 py-2">After</th></tr></thead>
+                    <thead className="bg-secondary/70 text-left text-[13px] font-semibold text-muted-foreground"><tr><th scope="col" className="px-3 py-2">Field</th><th scope="col" className="px-3 py-2">Before</th><th scope="col" className="px-3 py-2">After</th></tr></thead>
                     <tbody className="divide-y divide-border">
                       {[...new Set([...Object.keys(selected.before ?? {}), ...Object.keys(selected.after ?? {})])].map((k) => (
                         <tr key={k}><th scope="row" className="px-3 py-2 text-left font-medium">{k}</th><td className="px-3 py-2 break-words text-muted-foreground">{selected.before?.[k] ?? "—"}</td><td className="px-3 py-2 break-words">{selected.after?.[k] ?? "—"}</td></tr>

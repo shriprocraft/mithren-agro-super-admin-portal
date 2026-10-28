@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn } from "cn";
 import { Search, X } from "lucide-react";
-import { NativeSelect } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function Toolbar({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={cn("mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end", className)}>{children}</div>;
@@ -12,8 +12,8 @@ export function Toolbar({ children, className }: { children: React.ReactNode; cl
 export function SearchField({ value, onChange, label, placeholder, className }: { value: string; onChange: (v: string) => void; label: string; placeholder?: string; className?: string }) {
   const id = React.useId();
   return (
-    <div className={cn("flex min-w-0 flex-1 flex-col gap-1.5 sm:max-w-sm", className)}>
-      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
+    <div className={cn("flex min-w-0 flex-1 flex-col gap-1.5 sm:max-w-sm sm:min-w-64", className)}>
+      <label htmlFor={id} className="text-[13px] font-medium text-muted-foreground">
         {label}
       </label>
       <div className="relative">
@@ -37,28 +37,41 @@ export function SearchField({ value, onChange, label, placeholder, className }: 
   );
 }
 
+/** Radix Select cannot use "" as an item value, so "no filter" is represented internally by this sentinel. */
+const ALL = "__all__";
+
+/**
+ * Branded filter dropdown (Radix Select). `value === ""` means "no filter"; the first option shows
+ * `allLabel`. The visible label names the combobox for assistive technology.
+ */
 export function FilterSelect({ label, value, onChange, options, allLabel = "All", className }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
-  allLabel?: string;
+  /** Label of the "no filter" option; pass null when a value is always required. */
+  allLabel?: string | null;
   className?: string;
 }) {
   const id = React.useId();
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5 sm:w-48", className)}>
-      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
+      <span id={`${id}-label`} className="text-[13px] font-medium text-muted-foreground">
         {label}
-      </label>
-      <NativeSelect id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">{allLabel}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </NativeSelect>
+      </span>
+      <Select value={value || ALL} onValueChange={(v) => onChange(v === ALL ? "" : v)}>
+        <SelectTrigger aria-labelledby={`${id}-label`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {allLabel !== null && <SelectItem value={ALL}>{allLabel}</SelectItem>}
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

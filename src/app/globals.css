@@ -73,8 +73,15 @@
   * {
     @apply border-border;
   }
+  /* The page scrolls normally (wheel, trackpad, keyboard, touch) but its scrollbar is hidden, as on
+     the storefront. Only the document-level bar is hidden: overflow is never changed, and inner
+     scroll areas use the scrollbar-subtle / scrollbar-thin utilities below. */
   html {
     @apply font-sans;
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
   }
   body {
     @apply bg-background text-foreground antialiased;
@@ -104,9 +111,44 @@
   box-shadow: 0 6px 16px -8px rgb(46 125 50 / 0.55);
 }
 
+/* Visible, slim scrollbar for content that scrolls sideways (wide tables), so the extra columns
+   stay discoverable. */
 @utility scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-color: color-mix(in oklab, var(--input), transparent 45%) transparent;
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: color-mix(in oklab, var(--input), transparent 45%);
+  }
+}
+
+/* Vertical panels (sidebar, drawers, menus): the thumb only appears while the pointer is over the
+   panel, so it never distracts but is still there to grab. */
+@utility scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  &:hover,
+  &:focus-within {
+    scrollbar-color: color-mix(in oklab, var(--input), transparent 50%) transparent;
+  }
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: transparent;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--input), transparent 50%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

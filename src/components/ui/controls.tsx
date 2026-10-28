@@ -23,7 +23,7 @@ const Tabs = TabsPrimitive.Root;
 
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return (
-    <div className="scrollbar-thin -mx-1 overflow-x-auto px-1 pb-1">
+    <div className="scrollbar-subtle -mx-1 overflow-x-auto px-1 pb-1">
       <TabsPrimitive.List className={cn("inline-flex min-w-max gap-1 rounded-full border border-border bg-card p-1", className)} {...props} />
     </div>
   );

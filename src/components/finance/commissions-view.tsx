@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Lock, Plus } from "lucide-react";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { Field } from "@/components/admin/field";
-import { FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
+import { ClearFilters, FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
 import { Card, DemoNotice, NeedsClarification, PageHeader } from "@/components/admin/primitives";
 import { useAdmin } from "@/components/admin/use-admin";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input, NativeSelect, Textarea } from "@/components/ui/input";
 import { formatDate, formatDateTime, formatINR, humanize } from "@/lib/format";
 import { addCommissionConfig } from "@/lib/mock/actions";
+import { siteConfig } from "@/config/site";
+import { istDay } from "@/lib/dates";
 import { byId } from "@/lib/mock/selectors";
 import { matchesSearch } from "@/lib/table";
 import type { CommissionConfig, CommissionRecord, DemoDb } from "@/lib/types";
@@ -20,15 +22,39 @@ import type { CommissionConfig, CommissionRecord, DemoDb } from "@/lib/types";
 const targetName = (db: DemoDb, c: CommissionConfig) =>
   c.scope === "global" ? "All sellers and categories" : c.scope === "category" ? (byId(db.categories, c.targetId)?.name ?? c.targetId) : (byId(db.sellers, c.targetId)?.businessName ?? c.targetId);
 
+const VALUE_OPTIONS = [
+  { value: "small", label: "Under ₹100" },
+  { value: "medium", label: "₹100 – ₹499" },
+  { value: "large", label: "₹500 and above" },
+];
+const valueBandOf = (paise: number) => (paise < 10000 ? "small" : paise < 50000 ? "medium" : "large");
+
 export function CommissionsView() {
   const { db, run, toast } = useAdmin();
   const [formOpen, setFormOpen] = React.useState(false);
   const [scope, setScope] = React.useState("");
   const [query, setQuery] = React.useState("");
   const [seller, setSeller] = React.useState("");
+  const [rateState, setRateState] = React.useState("");
+  const [effective, setEffective] = React.useState("");
+  const [valueBand, setValueBand] = React.useState("");
+  const [month, setMonth] = React.useState("");
 
-  const configs = db.commissionConfigs.filter((c) => !scope || c.scope === scope);
-  const records = db.commissionRecords.filter((r) => (!seller || r.sellerId === seller) && matchesSearch(query, [r.id, r.subOrderId]));
+  const configs = db.commissionConfigs.filter(
+    (c) =>
+      (!scope || c.scope === scope) &&
+      (!rateState || (rateState === "unset" ? c.ratePercent === null : c.ratePercent !== null)) &&
+      // Date comparison only: whether an entry is "in effect" is not decided here (Q-COMMISSION-EFFECTIVE).
+      (!effective || (effective === "past" ? c.effectiveFrom <= siteConfig.demoReferenceDate : c.effectiveFrom > siteConfig.demoReferenceDate)),
+  );
+  const months = [...new Set(db.commissionRecords.map((r) => istDay(r.recordedAt).slice(0, 7)))].sort();
+  const records = db.commissionRecords.filter(
+    (r) =>
+      (!seller || r.sellerId === seller) &&
+      (!valueBand || valueBandOf(r.baseAmountPaise) === valueBand) &&
+      (!month || istDay(r.recordedAt).startsWith(month)) &&
+      matchesSearch(query, [r.id, r.subOrderId]),
+  );
 
   const configColumns: Column<CommissionConfig>[] = [
     { key: "scope", header: "Scope", sortValue: (c) => c.scope, cell: (c) => <span className="font-medium">{c.scope === "global" ? "Global default" : `${humanize(c.scope)} override`}</span> },
@@ -59,15 +85,21 @@ export function CommissionsView() {
       <Card title="Configuration" description="Entries are append-only in this demo, so earlier configuration is never overwritten.">
         <Toolbar>
           <FilterSelect label="Scope" value={scope} onChange={setScope} options={[{ value: "global", label: "Global default" }, { value: "category", label: "Category override" }, { value: "seller", label: "Seller override" }]} />
+          <FilterSelect label="Rate" value={rateState} onChange={setRateState} options={[{ value: "unset", label: "Needs clarification" }, { value: "set", label: "Rate entered (demo input)" }]} allLabel="Any" />
+          <FilterSelect label="Effective from" value={effective} onChange={setEffective} options={[{ value: "past", label: "On or before reference date" }, { value: "future", label: "After reference date" }]} allLabel="Any date" />
+          <ClearFilters active={Boolean(scope || rateState || effective)} onClear={() => { setScope(""); setRateState(""); setEffective(""); }} />
         </Toolbar>
-        <DataTable caption="Commission configuration" rows={configs} columns={configColumns} getRowId={(c) => c.id} initialSort={{ key: "effective", direction: "asc" }} resetKey={scope} />
+        <DataTable caption="Commission configuration" rows={configs} columns={configColumns} getRowId={(c) => c.id} initialSort={{ key: "effective", direction: "asc" }} resetKey={`${scope}|${rateState}|${effective}`} />
       </Card>
       <Card className="mt-6" title={<span className="inline-flex items-center gap-2"><Lock className="size-4 text-muted-foreground" aria-hidden="true" />Historical calculation records</span>} description="One record per delivered vendor sub-order. Records are immutable: adding configuration never rewrites them.">
         <Toolbar>
           <SearchField label="Search records" placeholder="Record or sub-order ID" value={query} onChange={setQuery} />
           <FilterSelect label="Seller" value={seller} onChange={setSeller} options={db.sellers.filter((s) => db.commissionRecords.some((r) => r.sellerId === s.id)).map((s) => ({ value: s.id, label: s.businessName }))} />
+          <FilterSelect label="Sub-order value" value={valueBand} onChange={setValueBand} options={VALUE_OPTIONS} allLabel="Any value" />
+          <FilterSelect label="Recorded in" value={month} onChange={setMonth} options={months.map((m) => ({ value: m, label: formatDate(`${m}-15`).slice(3) }))} allLabel="Any month" />
+          <ClearFilters active={Boolean(query || seller || valueBand || month)} onClear={() => { setQuery(""); setSeller(""); setValueBand(""); setMonth(""); }} />
         </Toolbar>
-        <DataTable caption="Commission calculation records" rows={records} columns={recordColumns} getRowId={(r) => r.id} initialSort={{ key: "at", direction: "desc" }} resetKey={`${query}|${seller}`} />
+        <DataTable caption="Commission calculation records" rows={records} columns={recordColumns} getRowId={(r) => r.id} initialSort={{ key: "at", direction: "desc" }} resetKey={`${query}|${seller}|${valueBand}|${month}`} />
         <p className="mt-3 text-xs text-muted-foreground">“Not recorded” means no commission amount exists because the rate and formula are not specified. The demo does not back-fill these records.</p>
       </Card>
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
@@ -132,12 +164,12 @@ function ConfigForm({ db, onSave, onCancel }: { db: DemoDb; onSave: (input: Omit
           </Field>
         )}
         <Field label="Rate (%) — demo input" error={errors.rate} hint="Leave empty to record the entry as “Needs clarification”. Whether commission is a percentage is itself unconfirmed.">
-          <Input type="number" inputMode="decimal" min={0} max={100} step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} />
+          <Input type="number" inputMode="decimal" min={0} max={100} step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="0–100, e.g. 8.5 (optional)" />
         </Field>
-        <Field label="Effective from" required error={errors.effectiveFrom}>
+        <Field label="Effective from" required error={errors.effectiveFrom} hint="DD/MM/YYYY">
           <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
         </Field>
-        <Field label="Note" hint="Optional."><Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className="min-h-16" /></Field>
+        <Field label="Note" hint="Optional."><Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className="min-h-16" placeholder="Why this entry was added (optional)" /></Field>
         {formError && <p role="alert" className="text-sm font-medium text-destructive">{formError}</p>}
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>Cancel</Button>

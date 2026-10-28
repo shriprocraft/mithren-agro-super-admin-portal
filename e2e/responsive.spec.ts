@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { login, overflow } from "./helpers";
 
-const WIDTHS = [320, 375, 768, 1024, 1440];
+const WIDTHS = [320, 375, 768, 1024, 1280, 1440];
 const PAGES = ["/admin", "/admin/orders", "/admin/products", "/admin/payments", "/admin/settlements", "/admin/coupons", "/admin/reports", "/admin/settings"];
 
 for (const width of WIDTHS) {

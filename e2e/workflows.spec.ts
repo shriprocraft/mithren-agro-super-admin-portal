@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { login } from "./helpers";
+import { choose, login } from "./helpers";
 
 const table = (page: Page, caption: string) => page.locator("table", { has: page.locator(`caption:text-is("${caption}")`) });
 
@@ -13,7 +13,7 @@ test.describe("tables: search, filters, sorting, pagination", () => {
     await expect(page.getByText(/Showing 11–20 of 42/)).toBeVisible();
 
     // Filtering returns the table to page 1.
-    await page.getByLabel("Order status").selectOption("cancelled");
+    await choose(page, "Order status", "Cancelled");
     await expect(page.getByText(/Showing 1–2 of 2/)).toBeVisible();
     await expect(orders.locator("tbody tr")).toHaveCount(2);
     await page.getByRole("button", { name: "Clear filters" }).click();
@@ -102,7 +102,7 @@ test.describe("approval workflows and audit history", () => {
 test.describe("financial consistency", () => {
   test("processing a refund updates the refund, the order and the audit log", async ({ page }) => {
     await login(page, "/admin/refunds");
-    await page.getByLabel("Status").selectOption("requested");
+    await choose(page, "Status", "Requested");
     const rows = table(page, "Refunds").locator("tbody tr");
     await expect(rows).toHaveCount(2);
     const orderId = (await rows.first().locator("td:nth-child(2) a").innerText()).trim();
@@ -184,7 +184,7 @@ test.describe("forms, persistence and export", () => {
 
   test("CSV export downloads the filtered report with escaped values", async ({ page }) => {
     await login(page, "/admin/reports");
-    await page.getByLabel("Report", { exact: true }).selectOption("refunds");
+    await choose(page, "Report", "Refunds");
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: "Export CSV" }).click();
     const file = await download;
@@ -195,7 +195,7 @@ test.describe("forms, persistence and export", () => {
     expect(lines.length).toBeGreaterThan(1);
     expect(text).not.toContain("@example.com");
 
-    await page.getByLabel("Report", { exact: true }).selectOption("taxes");
+    await choose(page, "Report", "Taxes");
     await expect(page.getByRole("button", { name: "Export CSV" })).toBeDisabled();
   });
 });

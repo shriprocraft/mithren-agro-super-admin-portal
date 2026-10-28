@@ -67,10 +67,10 @@ export function SettingsView() {
                 </div>
               ))}
             </dl>
-            <Field label="Marketplace name" required error={errors.marketplaceName}><Input value={form.marketplaceName} onChange={set("marketplaceName")} maxLength={60} /></Field>
-            <Field label="Tagline"><Input value={form.tagline} onChange={set("tagline")} maxLength={120} /></Field>
-            <Field label="Support email" required error={errors.supportEmail}><Input type="email" value={form.supportEmail} onChange={set("supportEmail")} /></Field>
-            <Field label="Support phone" required error={errors.supportPhone}><Input type="tel" value={form.supportPhone} onChange={set("supportPhone")} /></Field>
+            <Field label="Marketplace name" required error={errors.marketplaceName}><Input value={form.marketplaceName} onChange={set("marketplaceName")} placeholder="e.g. Mithren Agro" maxLength={60} /></Field>
+            <Field label="Tagline"><Input value={form.tagline} onChange={set("tagline")} placeholder="A short line shown under the name" maxLength={120} /></Field>
+            <Field label="Support email" required error={errors.supportEmail}><Input type="email" value={form.supportEmail} onChange={set("supportEmail")} placeholder="support@yourdomain.com" autoComplete="email" /></Field>
+            <Field label="Support phone" required error={errors.supportPhone}><Input type="tel" value={form.supportPhone} onChange={set("supportPhone")} placeholder="+91 98765 43210" autoComplete="tel" /></Field>
             <Button type="submit" className="justify-self-start">Save settings</Button>
           </form>
         </Card>
