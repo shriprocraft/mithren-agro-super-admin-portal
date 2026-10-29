@@ -1,5 +1,42 @@
 # Testing
 
+## Investment management upgrade (29 Oct 2026)
+
+Run on Windows 11, Node 24, Google Chrome (Playwright `chrome` channel) against the production build.
+
+| Check | Result |
+|---|---|
+| `npm run lint` | ✅ 0 problems |
+| `npm run typecheck` | ✅ no errors |
+| `npm test` (Vitest) | ✅ 89 / 89 (27 new in `tests/investment.test.ts`) |
+| `npm run build` | ✅ 40 routes (15 new investment routes, 3 of them dynamic) |
+| `npx playwright test` | ✅ 54 / 54 (9 new in `e2e/investments.spec.ts`; the route list now covers all 35 sidebar routes) |
+
+Unit coverage: six sectors / two projects each / 12 projects; five standard plans and no custom plan;
+no recorded metrics, durations, gateway references or calculated returns; idempotent seeding and
+re-adding a missing seeded record; v1→v2 migration keeps marketplace data; referential integrity (no
+orphans); verified ⇔ verification record; active ⇔ verified contribution equal to the amount;
+pending/failed never verified; verification updates totals exactly once; duplicate/excess refunds
+refused; application approve/reject with mandatory reason; suspension keeps history and blocks new
+activity; project validation and duplicate detection; archive instead of delete; no allocations to
+inactive projects; splitting refused until a rule is recorded, then sums validated; plan versioning
+keeps old participation terms; disabling a plan keeps history; activation rules; completion refused;
+payout completion requires approval, reference and evidence; document type/size validation; Admin
+role and Admin preview refused for restricted actions; report exports audited.
+
+End-to-end coverage: sectors/projects/plans render; investor search and pagination; application
+approval updates the queue, investor record and audit trail; rejection requires a reason;
+contribution verification moves the amount from unconfirmed to verified; project form validation and
+creation; inactive projects not offered for allocations and seeded projects not deletable; CSV export
+contains exactly the filtered rows and no contact details; Admin preview blocks restricted actions;
+all investment routes (including detail pages) render without page errors or horizontal overflow at
+390 px and 1280 px.
+
+During the run, two new e2e tests failed on their first attempt because of over-broad selectors in
+the test code (a custom text match that also hit the notice saying the custom plan is excluded, and
+a link name that matched both the name link and the View button). Both selectors were corrected and
+the tests passed; no application defect was involved.
+
 ## UI polish round (28 Oct 2026)
 
 Run against the production build (`next build` + `next start --port 3200`) with Chrome.

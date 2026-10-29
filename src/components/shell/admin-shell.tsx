@@ -22,6 +22,9 @@ function badgeCounts(db: DemoDb): Record<BadgeKey, number> {
     pendingProducts: db.products.filter((p) => p.approvalStatus === "pending").length,
     requestedRefunds: db.refunds.filter((r) => r.status === "requested").length,
     openTickets: db.tickets.filter((t) => t.status === "open").length,
+    openApplications: db.investment.applications.filter((a) => a.status === "submitted" || a.status === "under_review" || a.status === "info_requested").length,
+    contributionsToVerify: db.investment.transactions.filter((t) => t.status === "successful" || t.status === "under_verification").length,
+    pendingAllocations: db.investment.allocations.filter((a) => a.status === "proposed").length,
   };
 }
 

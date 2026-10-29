@@ -1,4 +1,6 @@
+import type { InvestmentState } from "@/lib/investment/types";
 import type { DemoDb } from "@/lib/types";
+import { createInvestmentState, investmentAuditSeed } from "./fixtures/investment";
 import { categoriesFixture, inventoryAlertsFixture, productReportsFixture, productsFixture } from "./fixtures/catalogue";
 import {
   auditFixture,
@@ -18,10 +20,45 @@ import { generateOrders } from "./fixtures/orders";
 import { customersFixture, sellersFixture, staffFixture } from "./fixtures/people";
 
 /** Bump when the fixture shape changes so stale browser copies are discarded instead of mis-read. */
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
+
+/**
+ * Idempotent seed: adds any seeded sector, project or plan whose ID is missing and never duplicates
+ * or overwrites an existing record. Running it repeatedly is safe. When there is no investment state
+ * yet, the full demo seed (with its audit history) is created.
+ */
+export function mergeInvestmentSeed(existing: InvestmentState | undefined): InvestmentState {
+  if (!existing) return createInvestmentState();
+  const seed = createInvestmentState();
+  const addMissing = <T extends { id: string }>(current: T[], seeded: T[]) => [...current, ...seeded.filter((s) => !current.some((c) => c.id === s.id))];
+  return {
+    ...existing,
+    seedVersion: Math.max(existing.seedVersion, seed.seedVersion),
+    sectors: addMissing(existing.sectors, seed.sectors),
+    projects: addMissing(existing.projects, seed.projects),
+    plans: addMissing(existing.plans, seed.plans),
+    rules: [...existing.rules, ...seed.rules.filter((s) => !existing.rules.some((r) => r.key === s.key))],
+  };
+}
+
+/**
+ * Upgrades a stored copy without discarding the user's marketplace changes: a version-1 database
+ * gains the investment slice and its seeded audit history. Returns null for anything unrecognised.
+ */
+export function migrateDb(raw: unknown): DemoDb | null {
+  if (!raw || typeof raw !== "object" || !Array.isArray((raw as DemoDb).orders)) return null;
+  const db = raw as DemoDb;
+  if (db.version === DB_VERSION && db.investment) return { ...db, investment: mergeInvestmentSeed(db.investment) };
+  if (db.version === 1) {
+    const investment = mergeInvestmentSeed(undefined);
+    return { ...db, version: DB_VERSION, investment, audit: [...db.audit, ...investmentAuditSeed(investment)].sort((a, b) => b.at.localeCompare(a.at)) };
+  }
+  return null;
+}
 
 /** A fresh, fully independent copy of the demo dataset. */
 export function createInitialDb(): DemoDb {
+  const investment = mergeInvestmentSeed(undefined);
   const generated = generateOrders();
   const customers = structuredClone(customersFixture);
 
@@ -72,6 +109,7 @@ export function createInitialDb(): DemoDb {
     tickets,
     content: structuredClone(contentFixture),
     settings: structuredClone(settingsFixture),
-    audit: structuredClone(auditFixture),
+    audit: [...structuredClone(auditFixture), ...investmentAuditSeed(investment)].sort((a, b) => b.at.localeCompare(a.at)),
+    investment,
   };
 }

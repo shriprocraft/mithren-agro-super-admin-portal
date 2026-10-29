@@ -8,6 +8,13 @@ sellers and approvals, products and approvals, categories, orders, payments, ref
 settlements, delivery, promotions, reviews, support, content, reports, staff and permissions, audit
 logs, and settings.
 
+It also includes an **Investment management** area (`/admin/investments/*`) for Mithren Agro's
+agricultural investment programme: six sectors with two illustrative projects each, the five
+standard contribution plans (₹1,000 – ₹1,00,000; no custom plan), investors and applications,
+participations, project allocations, contribution verification, returns and payouts, documents,
+reports, an audit trail and versioned business rules. Financial rules that are not approved show
+**Needs clarification**. See `docs/INVESTMENT_MODULE.md`.
+
 **This phase is frontend-only.** Every record is fictional mock data and every action is simulated
 in your browser. No backend, authentication provider, payment gateway, bank or payout service, KYC
 service, messaging provider or delivery system is connected. Simulated outcomes are labelled
@@ -71,7 +78,11 @@ The credentials are also shown on the login page.
   are in the downloaded bundle.
 - "Forgot password?" is simulated and states that no email was sent.
 - There is no public registration route, by design.
-- Staff roles and the permission matrix are a display only. No screen is restricted by role.
+- Marketplace staff roles and their permission matrix are a display only. The investment module's
+  actions do check a draft permission matrix (and offer a downgrade-only "preview as Admin"), but
+  that check runs in the browser and is not a security boundary.
+- Stored demo data from before the investment upgrade is migrated automatically (DB version 2);
+  marketplace changes are kept.
 - Real deployments need server-verified sessions, hashed credentials and server-side authorization.
   These are out of scope for this phase.
 
@@ -98,6 +109,7 @@ more. The app shows **Needs clarification** instead of inventing them. The full 
 
 | File | Contents |
 |---|---|
+| `docs/INVESTMENT_MODULE.md` | Investment routes, data model, safeguards, transaction states |
 | `docs/REQUIREMENTS_TRACEABILITY.md` | Every source requirement → implementation → status → tests |
 | `docs/NEEDS_CLARIFICATION.md` | Open business questions and how the demo behaves meanwhile |
 | `docs/ARCHITECTURE.md` | Structure, data layer, state, auth, UI patterns |

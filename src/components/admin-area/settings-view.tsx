@@ -112,6 +112,11 @@ export function SettingsView() {
           <p className="mt-3 text-xs text-muted-foreground">Templates are view-only; the source lists notifications in scope but defines no route or editing rules for them (Q-NOTIFICATIONS).</p>
         </Card>
 
+        <Card title="Investment rules" description="Plan terms, eligibility, allocation, lifecycle, returns, payouts, applications, documents and alerts.">
+          <p className="mb-3 text-sm text-muted-foreground">Investment business rules are recorded only after Mithren Agro approves them, and each one is versioned.</p>
+          <Link href="/admin/investments/settings" className="font-medium text-primary underline">Open investment rules &amp; settings</Link>
+        </Card>
+
         <Card title="Demo data" description="Restore the original demo records.">
           <p className="mb-3 text-sm text-muted-foreground">Demo changes are kept in this browser&apos;s local storage until you reset them or clear site data.</p>
           <Button variant="destructive" onClick={reset}><RotateCcw aria-hidden="true" />Reset demo data</Button>

@@ -53,3 +53,25 @@ structural minimum described in the "Demo behaviour" column.
 | Brand colours | The master prompt suggests `#174D35` / `#103B29` / `#168451` as "initial design suggestions". The branding brief says the existing customer storefront is the source of truth and forbids a competing palette. | The storefront's actual "Modern Sage" tokens (`#2E7D32` primary, etc.) are used. See `docs/DESIGN_TOKENS.md`. |
 | Background | The master prompt suggests `#F8FAF7`. The storefront uses `#FFFFFF` with `#F5FDF7` for soft surfaces. | `#F5FDF7` (an existing storefront token) is the admin canvas; cards are white. |
 | Notifications | The scope lists notifications (§4.12), but neither document includes a notifications route. | No new route was invented. The content appears inside Settings (see Q-NOTIFICATIONS). |
+
+## Investment programme (added with the investment management module)
+
+None of these rules has been approved by Mithren Agro. The UI shows "Needs clarification — this rule
+must be approved by Mithren Agro before it can be used." Authorized Super Admins can **record** an
+approved rule (with an approval reference) under Investment rules; recorded rules are versioned, and
+only the allocation-splitting rule changes demo behaviour.
+
+| ID | Question | Demo behaviour until answered |
+|---|---|---|
+| Q-INV-PLAN-TERMS | Plan duration, minimum / maximum contribution, effective dates and any terms of the five standard plans | Stored as `null`; shown as Needs clarification. No defaults. |
+| Q-INV-ELIGIBILITY | Which projects or sectors each plan may be allocated to | `eligibleSectorIds = null` (not "all projects"); no eligibility filter applied. |
+| Q-INV-COMBINE | May an investor hold several participations or combine plans? Is a contribution collected before or after approval? | Not restricted; fixtures include an investor with two participations. |
+| Q-INV-ALLOCATION | Allocation limits, percentages, eligibility, splitting a contribution between projects | At most one open allocation per participation, never above its amount, Active projects only. |
+| Q-INV-LIFECYCLE | Completion and cancellation conditions; contractual effect of each participation state | Completion is not offered; cancellation is blocked while unrefunded verified contributions exist. |
+| Q-INV-RETURNS | Return formula, rates, guarantees, principal protection, maturity, reinvestment, project-specific returns | Nothing calculated; return records carry `calculatedAmountPaise = null`. |
+| Q-INV-PAYOUTS | Payout frequency, types, early withdrawal, tax treatment, completion evidence | Approval ≠ payment; "paid" needs a reference and a payout-evidence document and is simulated. |
+| Q-INV-REFUND | Refund eligibility for contributions | Simulated refunds only on verified contributions, bounded by the remaining amount. |
+| Q-INV-KYC | Mandatory documents, KYC and eligibility criteria for investor applications | Manual review only; no checklist enforced; no "KYC verified" status exists. |
+| Q-INV-SUSPENSION | What a suspended investor may still do | Demo safeguard: no new participations, allocations or payout approvals; history untouched. |
+| Q-INV-DOCS | Accepted document types, size limits, retention | Demo limit: PDF / JPEG / PNG up to 5 MB, metadata only. |
+| Q-PERMISSIONS (extended) | Admin role's investment permissions | Withheld except the overview (least privilege). |

@@ -1,17 +1,26 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import { createInitialDb, DB_VERSION } from "@/lib/mock/initial-db";
+import { createInitialDb, migrateDb } from "@/lib/mock/initial-db";
 import type { ActionContext, ActionResult, MockAction } from "@/lib/mock/actions";
-import type { DemoDb } from "@/lib/types";
+import type { DemoDb, StaffRole } from "@/lib/types";
 import { useSession } from "@/lib/auth/session";
 import { createPersistentStore } from "./persistent-store";
 
 export const DB_STORAGE_KEY = "mithren-admin-demo-db";
 
-export const demoDbStore = createPersistentStore<DemoDb>(DB_STORAGE_KEY, createInitialDb, (raw) =>
-  raw && typeof raw === "object" && (raw as DemoDb).version === DB_VERSION && Array.isArray((raw as DemoDb).orders) ? (raw as DemoDb) : null,
-);
+// Older stored copies are upgraded (marketplace changes kept); unrecognised data reloads the fixtures.
+export const demoDbStore = createPersistentStore<DemoDb>(DB_STORAGE_KEY, createInitialDb, migrateDb);
+
+/**
+ * Downgrade-only role preview for the investment module ("view as Admin"). It lowers the permissions
+ * that both the UI and the mock actions apply; it can never raise them.
+ */
+export const ROLE_PREVIEW_KEY = "mithren-admin-role-preview";
+export const rolePreviewStore = createPersistentStore<StaffRole | null>(ROLE_PREVIEW_KEY, () => null, (raw) => (raw === "admin" ? "admin" : null));
+export function useRolePreview(): StaffRole | null {
+  return useSyncExternalStore(rolePreviewStore.subscribe, rolePreviewStore.get, () => null);
+}
 
 const serverSnapshot = () => null;
 
@@ -33,8 +42,8 @@ function newId(prefix: string) {
 }
 
 /** Runs a mock action as the given actor against the stored demo db and persists a successful result. */
-export function runAs<P>(actor: ActionContext["actor"], action: MockAction<P>, payload: P): ActionResult {
-  const ctx: ActionContext = { actor, now: new Date().toISOString(), newId };
+export function runAs<P>(actor: ActionContext["actor"], action: MockAction<P>, payload: P, roleCap?: StaffRole | null): ActionResult {
+  const ctx: ActionContext = { actor, now: new Date().toISOString(), newId, roleCap: roleCap ?? undefined };
   let result: ActionResult;
   try {
     result = action(demoDbStore.get(), payload, ctx);
@@ -49,12 +58,13 @@ export function runAs<P>(actor: ActionContext["actor"], action: MockAction<P>, p
 /** Runs a mock action as the signed-in demo admin and persists the result. */
 export function useRunAction() {
   const session = useSession();
+  const preview = useRolePreview();
   return useCallback(
     <P,>(action: MockAction<P>, payload: P): ActionResult => {
       if (session.status !== "signed_in") return { ok: false, error: "Your demo session has ended. Sign in again." };
-      return runAs({ id: session.session.staffId, name: session.session.name }, action, payload);
+      return runAs({ id: session.session.staffId, name: session.session.name }, action, payload, preview);
     },
-    [session],
+    [session, preview],
   );
 }
 

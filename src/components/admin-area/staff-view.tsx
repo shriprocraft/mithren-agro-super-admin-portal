@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { ClearFilters, FilterSelect, SearchField, Toolbar } from "@/components/admin/filters";
@@ -75,6 +76,9 @@ export function StaffView() {
       <Card className="mt-6" title="Permission matrix" description="Roles named in the source: Super Admin and Admin.">
         <div className="mb-4">
           <NeedsClarification refId="Q-PERMISSIONS">The source requires a permission matrix and least-privilege access but defines only that Super Admin has full platform access. The Admin role&apos;s permissions, any further roles, and per-action rights (view / edit / approve / export) must be confirmed before this matrix can be completed.</NeedsClarification>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Granular investment permissions (approve payouts, verify contributions, manage allocations…) are listed in the <Link href="/admin/investments/settings" className="font-medium text-primary underline">investment permission matrix</Link>. Unlike the marketplace screens, those are enforced by the demo&apos;s investment actions.
+          </p>
         </div>
         <div className="scrollbar-thin relative overflow-x-auto rounded-xl border border-border" role="region" aria-label="Permission matrix" tabIndex={0}>
           <table className="w-full min-w-[560px] text-sm">

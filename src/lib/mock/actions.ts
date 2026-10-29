@@ -33,27 +33,29 @@ export interface ActionContext {
   now: string;
   /** Unique id generator (random at action time; never used during render). */
   newId: (prefix: string) => string;
+  /** Downgrade-only role cap (the "preview as Admin" switch). Permission checks use the lower role. */
+  roleCap?: StaffRole;
 }
 
 export type ActionResult = { ok: true; db: DemoDb; message: string } | { ok: false; error: string };
 export type MockAction<P> = (db: DemoDb, payload: P, ctx: ActionContext) => ActionResult;
 
-const fail = (error: string): ActionResult => ({ ok: false, error });
+export const fail = (error: string): ActionResult => ({ ok: false, error });
 
-function withAudit(
+export function withAudit(
   db: DemoDb,
   ctx: ActionContext,
-  entry: { action: string; targetType: AuditTargetType; targetId: string; summary: string; before?: Record<string, string>; after?: Record<string, string> },
+  entry: { action: string; targetType: AuditTargetType; targetId: string; summary: string; note?: string; before?: Record<string, string>; after?: Record<string, string> },
 ): AuditEvent[] {
   const event: AuditEvent = { id: ctx.newId("aud"), at: ctx.now, actorId: ctx.actor.id, actorName: ctx.actor.name, ...entry };
   return [event, ...db.audit];
 }
 
-function replace<T extends { id: string }>(list: readonly T[], id: string, next: T): T[] {
+export function replace<T extends { id: string }>(list: readonly T[], id: string, next: T): T[] {
   return list.map((item) => (item.id === id ? next : item));
 }
 
-const required = (value: string | undefined, label: string) => (!value || !value.trim() ? `${label} is required.` : null);
+export const required = (value: string | undefined, label: string) => (!value || !value.trim() ? `${label} is required.` : null);
 
 // ================================================================ Session
 export const recordSignIn: MockAction<{ event: "sign_in" | "sign_out" }> = (db, { event }, ctx) => ({
@@ -796,8 +798,8 @@ export const deleteFaq: MockAction<{ faqId: string }> = (db, { faqId }, ctx) => 
   };
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE = /^\+?[0-9][0-9\s-]{7,16}$/;
+export const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const PHONE = /^\+?[0-9][0-9\s-]{7,16}$/;
 
 export const updateContact: MockAction<ContactDetails> = (db, input, ctx) => {
   if (!EMAIL.test(input.email.trim())) return fail("Enter a valid contact email.");

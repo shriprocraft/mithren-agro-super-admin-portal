@@ -25,6 +25,20 @@ export const ROUTES: [string, string][] = [
   ["/admin/staff", "Staff & permissions"],
   ["/admin/audit-logs", "Audit logs"],
   ["/admin/settings", "Settings"],
+  ["/admin/investments", "Investment overview"],
+  ["/admin/investments/investors", "Investors"],
+  ["/admin/investments/applications", "Investor applications"],
+  ["/admin/investments/plans", "Investment plans"],
+  ["/admin/investments/sectors", "Agricultural sectors"],
+  ["/admin/investments/projects", "Project portfolio"],
+  ["/admin/investments/participations", "Investment participations"],
+  ["/admin/investments/transactions", "Contributions & transactions"],
+  ["/admin/investments/allocations", "Project allocations"],
+  ["/admin/investments/payouts", "Returns & payouts"],
+  ["/admin/investments/reports", "Investment reports"],
+  ["/admin/investments/documents", "Investment documents"],
+  ["/admin/investments/audit", "Investment audit trail"],
+  ["/admin/investments/settings", "Investment rules & settings"],
 ];
 
 export async function login(page: Page, next = "/admin") {

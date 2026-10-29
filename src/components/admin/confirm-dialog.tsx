@@ -17,7 +17,8 @@ export interface ConfirmOptions {
   reason?: { label: string; placeholder?: string; hint?: string };
   /** Extra content shown above the reason (e.g. the impact of the change). */
   details?: React.ReactNode;
-  onConfirm: (reason: string) => ActionResult;
+  /** May return a promise (simulated processing); the confirm button shows a spinner meanwhile. */
+  onConfirm: (reason: string) => ActionResult | Promise<ActionResult>;
 }
 
 /**
@@ -36,14 +37,27 @@ function ConfirmBody({ options, onClose, onDone }: { options: ConfirmOptions; on
   const [reason, setReason] = React.useState("");
   const [fieldError, setFieldError] = React.useState<string | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [pending, setPending] = React.useState(false);
+  const running = React.useRef(false);
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    // Guards against a double click submitting the same action twice.
+    if (running.current) return;
     if (options.reason && !reason.trim()) {
       setFieldError(`${options.reason.label} is required.`);
       return;
     }
-    const result = options.onConfirm(reason.trim());
+    running.current = true;
+    setPending(true);
+    let result: ActionResult;
+    try {
+      result = await options.onConfirm(reason.trim());
+    } catch {
+      result = { ok: false, error: "The action could not be completed. Nothing was changed." };
+    }
+    running.current = false;
+    setPending(false);
     if (!result.ok) {
       setActionError(result.error);
       return;
@@ -79,10 +93,10 @@ function ConfirmBody({ options, onClose, onDone }: { options: ConfirmOptions; on
           </InlineAlert>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={pending}>
             Cancel
           </Button>
-          <Button type="submit" variant={options.tone === "danger" ? "destructive-solid" : "default"}>
+          <Button type="submit" loading={pending} variant={options.tone === "danger" ? "destructive-solid" : "default"}>
             {options.confirmLabel}
           </Button>
         </DialogFooter>

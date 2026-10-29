@@ -31,6 +31,29 @@ const META = {
   policy: { draft: ["Draft", "warning"], published_demo: ["Published (demo)", "success"] },
   staff: { active: ["Active", "success"], inactive: ["Inactive", "neutral"] },
   role: { super_admin: ["Super Admin", "info"], admin: ["Admin", "neutral"] },
+  // Investment administration. Proposed UI states, not finalized business rules.
+  investorAccount: { active: ["Active", "success"], suspended: ["Suspended", "danger"] },
+  application: { submitted: ["Submitted", "info"], under_review: ["Under review", "warning"], info_requested: ["Additional information required", "warning"], approved: ["Approved (manual review)", "success"], rejected: ["Rejected", "danger"] },
+  project: { planning: ["Planning", "info"], active: ["Active (demo record)", "success"], on_hold: ["On hold", "warning"], archived: ["Archived", "neutral"] },
+  plan: { active: ["Enabled", "success"], disabled: ["Disabled", "neutral"] },
+  participation: { draft: ["Draft", "neutral"], submitted: ["Submitted", "info"], awaiting_review: ["Awaiting review", "warning"], approved: ["Approved", "success"], active: ["Active", "success"], completed: ["Completed", "neutral"], cancelled: ["Cancelled", "neutral"], rejected: ["Rejected", "danger"] },
+  allocation: { proposed: ["Proposed (not approved)", "warning"], approved: ["Approved (demo)", "success"], rejected: ["Rejected", "danger"], withdrawn: ["Withdrawn", "neutral"] },
+  transaction: {
+    initiated: ["Initiated", "neutral"],
+    pending: ["Pending", "warning"],
+    successful: ["Successful (mock record, unverified)", "info"],
+    failed: ["Failed", "danger"],
+    under_verification: ["Under verification", "warning"],
+    verified: ["Verified (simulated)", "success"],
+    rejected: ["Rejected", "danger"],
+    refunded: ["Refunded (simulated)", "neutral"],
+    partially_refunded: ["Partially refunded (simulated)", "info"],
+  },
+  returnReview: { pending_review: ["Pending review", "warning"], reviewed: ["Reviewed", "success"], rejected: ["Rejected", "danger"] },
+  payout: { requested: ["Requested", "warning"], approved_unpaid: ["Approved — not paid", "info"], rejected: ["Rejected", "danger"], paid_simulated: ["Paid (simulated)", "success"], failed: ["Failed", "danger"] },
+  invDocument: { not_reviewed: ["Not reviewed", "neutral"], reviewed_manual: ["Reviewed (manual)", "success"], issue_noted: ["Issue noted", "warning"] },
+  milestone: { planned: ["Planned", "neutral"], in_progress: ["In progress", "info"], done: ["Done", "success"] },
+  rule: { needs_clarification: ["Needs clarification", "warning"], recorded: ["Recorded (approved)", "success"] },
 } as const satisfies Record<string, Record<string, readonly [string, Tone]>>;
 
 export type StatusDomain = keyof typeof META;

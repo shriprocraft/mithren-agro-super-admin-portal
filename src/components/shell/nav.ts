@@ -1,29 +1,42 @@
 import {
+  ArrowLeftRight,
   BarChart3,
   ClipboardCheck,
+  ClipboardList,
   CreditCard,
+  FileStack,
   FileText,
+  FolderKanban,
   FolderTree,
+  HandCoins,
+  History,
   Landmark,
+  Layers,
   LayoutDashboard,
   LifeBuoy,
+  ListChecks,
   Package,
   PackageCheck,
   Percent,
+  PieChart,
   ScrollText,
   Settings,
+  SlidersHorizontal,
   ShieldCheck,
   ShoppingCart,
+  Sprout,
   Star,
   Store,
   TicketPercent,
   Truck,
   Undo2,
+  UserRoundCheck,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
-export type BadgeKey = "pendingSellers" | "pendingProducts" | "requestedRefunds" | "openTickets";
+export type BadgeKey = "pendingSellers" | "pendingProducts" | "requestedRefunds" | "openTickets" | "openApplications" | "contributionsToVerify" | "pendingAllocations";
 
 export interface NavItem {
   href: string;
@@ -41,11 +54,13 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-// Every route required by the scope (§7) appears exactly once.
+const INV = "/admin/investments";
+
+// Every route required by the scope (§7) appears exactly once; investment routes are a separate group.
 export const NAV_GROUPS: NavGroup[] = [
   { label: "Overview", items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }] },
   {
-    label: "Marketplace",
+    label: "Marketplace operations",
     items: [
       { href: "/admin/customers", label: "Customers", icon: Users },
       { href: "/admin/sellers", label: "Sellers", icon: Store },
@@ -53,35 +68,44 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/products", label: "Products", icon: Package },
       { href: "/admin/products/approvals", label: "Product approvals", icon: PackageCheck, badge: "pendingProducts", parent: "/admin/products" },
       { href: "/admin/categories", label: "Categories", icon: FolderTree },
-    ],
-  },
-  {
-    label: "Orders & finance",
-    items: [
       { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
       { href: "/admin/payments", label: "Payments", icon: CreditCard },
       { href: "/admin/refunds", label: "Refunds", icon: Undo2, badge: "requestedRefunds" },
       { href: "/admin/commissions", label: "Commissions", icon: Percent },
       { href: "/admin/settlements", label: "Settlements", title: "Seller settlements", icon: Landmark },
       { href: "/admin/delivery", label: "Delivery", icon: Truck },
-    ],
-  },
-  {
-    label: "Engagement",
-    items: [
       { href: "/admin/coupons", label: "Promotions", icon: TicketPercent },
       { href: "/admin/reviews", label: "Reviews", icon: Star },
       { href: "/admin/support", label: "Support", icon: LifeBuoy, badge: "openTickets" },
       { href: "/admin/content", label: "Content", icon: FileText },
+      { href: "/admin/reports", label: "Reports", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Investment management",
+    items: [
+      { href: INV, label: "Investment overview", icon: PieChart },
+      { href: `${INV}/investors`, label: "Investors", icon: UserRoundCheck, parent: INV },
+      { href: `${INV}/applications`, label: "Investor applications", icon: ClipboardList, badge: "openApplications", parent: INV },
+      { href: `${INV}/plans`, label: "Investment plans", icon: HandCoins, parent: INV },
+      { href: `${INV}/sectors`, label: "Agricultural sectors", icon: Layers, parent: INV },
+      { href: `${INV}/projects`, label: "Project portfolio", icon: Sprout, parent: INV },
+      { href: `${INV}/participations`, label: "Participations", title: "Investment participations", icon: FolderKanban, parent: INV },
+      { href: `${INV}/transactions`, label: "Contributions", title: "Contributions & transactions", icon: ArrowLeftRight, badge: "contributionsToVerify", parent: INV },
+      { href: `${INV}/allocations`, label: "Project allocations", icon: ListChecks, badge: "pendingAllocations", parent: INV },
+      { href: `${INV}/payouts`, label: "Returns & payouts", icon: Wallet, parent: INV },
+      { href: `${INV}/reports`, label: "Investment reports", icon: BarChart3, parent: INV },
+      { href: `${INV}/documents`, label: "Investment documents", icon: FileStack, parent: INV },
+      { href: `${INV}/audit`, label: "Investment audit trail", icon: History, parent: INV },
     ],
   },
   {
     label: "Administration",
     items: [
-      { href: "/admin/reports", label: "Reports", icon: BarChart3 },
       { href: "/admin/staff", label: "Staff & permissions", icon: ShieldCheck },
       { href: "/admin/audit-logs", label: "Audit logs", icon: ScrollText },
       { href: "/admin/settings", label: "Settings", icon: Settings },
+      { href: `${INV}/settings`, label: "Investment rules", title: "Investment rules & settings", icon: SlidersHorizontal, parent: "/admin/settings" },
     ],
   },
 ];

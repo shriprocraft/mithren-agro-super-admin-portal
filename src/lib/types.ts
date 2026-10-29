@@ -3,6 +3,8 @@
 // names the concepts (approval, suspension, restriction, moderation…) but does not define a status
 // list, so these are the minimum needed to represent them. See docs/NEEDS_CLARIFICATION.md (Q-STATUS).
 
+import type { InvestmentState } from "@/lib/investment/types";
+
 export type ISODate = string;
 export type Paise = number;
 
@@ -26,6 +28,8 @@ export interface AuditEvent {
   targetType: AuditTargetType;
   targetId: string;
   summary: string;
+  /** Reason or note entered by the administrator, when the action requires one. */
+  note?: string;
   before?: Record<string, string>;
   after?: Record<string, string>;
 }
@@ -47,7 +51,21 @@ export type AuditTargetType =
   | "staff"
   | "settings"
   | "session"
-  | "inventory";
+  | "inventory"
+  // Investment administration (src/lib/investment/types.ts)
+  | "investor"
+  | "investor_application"
+  | "investment_sector"
+  | "investment_project"
+  | "investment_plan"
+  | "investment_participation"
+  | "project_allocation"
+  | "contribution"
+  | "return_record"
+  | "payout"
+  | "investment_document"
+  | "investment_settings"
+  | "investment_report";
 
 // ---------------------------------------------------------------- Customers
 export interface Customer {
@@ -410,6 +428,8 @@ export interface Settings {
 // ---------------------------------------------------------------- Database
 export interface DemoDb {
   version: number;
+  /** Agricultural investment administration: a separate slice, so marketplace records are untouched. */
+  investment: InvestmentState;
   staff: StaffMember[];
   customers: Customer[];
   sellers: Seller[];
