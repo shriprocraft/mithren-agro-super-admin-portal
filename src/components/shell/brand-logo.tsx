@@ -1,31 +1,30 @@
 import Image from "next/image";
 import { cn } from "cn";
+import { brandAssets } from "@/config/brand";
 import { siteConfig } from "@/config/site";
 
-// The official Mithren Agro logo, copied unmodified from the customer storefront
-// (public/images/mithren-agro-logo.png, 1254×1254 with an opaque white background and wide margins).
-// As on the storefront, the frame shows only the artwork's bounding box (x 59–1194, y 289–879), so
-// proportions and colours are preserved without editing the file. It is only placed on white surfaces,
-// so the storefront's white-knockout filter is not needed.
-const SOURCE = 1254;
-const ART = { x: 59, y: 289, width: 1135, height: 590 };
+// The finalized Mithren Agro logo (public/Mithren_Agro_Logos/Mithren_Agro_Pvt_Ltd_PNG.png), used
+// unmodified. The file has a transparent background with a wide empty margin around the artwork, so
+// the frame shows only the artwork's bounding box: proportions, colours and transparency are kept and
+// the logo sits flush with surrounding layout. No container shape is added.
+const { src, width, height, art } = brandAssets.logo;
 
-export function BrandLogo({ className, preload = false }: { className?: string; preload?: boolean }) {
+export function BrandLogo({ className, preload = false, sizes = "420px" }: { className?: string; preload?: boolean; sizes?: string }) {
   return (
-    <span className={cn("relative inline-block shrink-0 overflow-hidden", className)} style={{ aspectRatio: `${ART.width} / ${ART.height}` }}>
+    <span className={cn("relative inline-block shrink-0 overflow-hidden", className)} style={{ aspectRatio: `${art.width} / ${art.height}` }}>
       <Image
-        src="/images/mithren-agro-logo.png"
+        src={src}
         alt={siteConfig.legalName}
-        width={SOURCE}
-        height={SOURCE}
-        sizes="240px"
+        width={width}
+        height={height}
+        sizes={sizes}
         preload={preload}
         className="absolute max-w-none"
         style={{
-          width: `${(SOURCE / ART.width) * 100}%`,
+          width: `${(width / art.width) * 100}%`,
           height: "auto",
-          left: `${(-ART.x / ART.width) * 100}%`,
-          top: `${(-ART.y / ART.height) * 100}%`,
+          left: `${(-art.x / art.width) * 100}%`,
+          top: `${(-art.y / art.height) * 100}%`,
         }}
       />
     </span>

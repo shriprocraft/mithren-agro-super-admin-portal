@@ -14,6 +14,7 @@ import { recordSignIn } from "@/lib/mock/actions";
 import { useDemoDb, useRunAction } from "@/lib/store/demo-store";
 import type { DemoDb } from "@/lib/types";
 import { BrandLogo } from "./brand-logo";
+import { SiteFooter } from "./site-footer";
 import { activeHref, breadcrumbsFor, findNavItem, NAV_GROUPS, type BadgeKey } from "./nav";
 
 function badgeCounts(db: DemoDb): Record<BadgeKey, number> {
@@ -90,7 +91,7 @@ function SidebarBrand({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col items-start gap-2.5 border-b border-border px-6 pt-6 pb-5", className)}>
       <Link href="/admin" className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4" aria-label="Mithren Agro Super Admin dashboard">
-        <BrandLogo className="w-[156px]" preload />
+        <BrandLogo className="w-[172px]" preload />
       </Link>
       <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-secondary-foreground uppercase ring-1 ring-primary/10 ring-inset">
         <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
@@ -141,7 +142,7 @@ function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
               ))}
             </ol>
           </nav>
-          <p className="mt-1 truncate text-lg leading-6 font-semibold text-foreground" aria-hidden="true">
+          <p className="mt-1 truncate font-heading text-lg leading-6 font-semibold text-foreground" aria-hidden="true">
             {item?.title ?? item?.label ?? "Super Admin"}
           </p>
         </div>
@@ -177,37 +178,42 @@ function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
 function ShellFrame({ db, children }: { db: DemoDb; children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   return (
-    <div className="min-h-svh bg-soft">
+    // Sidebar and content sit side by side in a flex row; the sidebar is sticky (not fixed), so the footer
+    // below the row spans the full viewport and is never covered by the sidebar.
+    <div className="flex min-h-svh flex-col bg-soft">
       <a href="#main" className="sr-only z-50 rounded-full bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
         Skip to content
       </a>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card lg:flex" aria-label="Sidebar">
-        <SidebarBrand />
-        <SidebarNav db={db} />
-      </aside>
-      <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/30 lg:hidden data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-          <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,85vw)] flex-col bg-card shadow-overlay outline-none lg:hidden data-[state=open]:animate-in data-[state=open]:slide-in-from-left">
-            <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
-            <DialogPrimitive.Description className="sr-only">Super Admin sections</DialogPrimitive.Description>
-            <div className="relative">
-              <SidebarBrand className="pr-16" />
-              <DialogPrimitive.Close className="absolute top-3 right-3 grid size-11 cursor-pointer place-items-center rounded-full text-muted-foreground hover:bg-soft hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
-                <X className="size-5" aria-hidden="true" />
-                <span className="sr-only">Close navigation menu</span>
-              </DialogPrimitive.Close>
-            </div>
-            <SidebarNav db={db} onNavigate={() => setMenuOpen(false)} />
-          </DialogPrimitive.Content>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
-      <div className="lg:pl-64">
-        <Header onOpenMenu={() => setMenuOpen(true)} />
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8">
-          {children}
-        </main>
+      <div className="flex flex-1">
+        <aside className="sticky top-0 z-40 hidden h-svh w-64 shrink-0 flex-col self-start border-r border-border bg-card lg:flex" aria-label="Sidebar">
+          <SidebarBrand />
+          <SidebarNav db={db} />
+        </aside>
+        <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>
+          <DialogPrimitive.Portal>
+            <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/30 lg:hidden data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+            <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,85vw)] flex-col bg-card shadow-overlay outline-none lg:hidden data-[state=open]:animate-in data-[state=open]:slide-in-from-left">
+              <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
+              <DialogPrimitive.Description className="sr-only">Super Admin sections</DialogPrimitive.Description>
+              <div className="relative">
+                <SidebarBrand className="pr-16" />
+                <DialogPrimitive.Close className="absolute top-3 right-3 grid size-11 cursor-pointer place-items-center rounded-full text-muted-foreground hover:bg-soft hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                  <X className="size-5" aria-hidden="true" />
+                  <span className="sr-only">Close navigation menu</span>
+                </DialogPrimitive.Close>
+              </div>
+              <SidebarNav db={db} onNavigate={() => setMenuOpen(false)} />
+            </DialogPrimitive.Content>
+          </DialogPrimitive.Portal>
+        </DialogPrimitive.Root>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Header onOpenMenu={() => setMenuOpen(true)} />
+          <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8">
+            {children}
+          </main>
+        </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }

@@ -11,7 +11,7 @@ Values below are **copied, not provisional**, unless marked otherwise.
 
 | Asset | Source | Admin location | Notes |
 |---|---|---|---|
-| Logo | `mithren-agro-customer/public/images/mithren-agro-logo.png` (1254×1254, owner-supplied) | `public/images/mithren-agro-logo.png` | Copied unmodified. `BrandLogo` crops to the artwork bounding box with the same coordinates as the storefront's `BrandMark` (x 59–1194, y 289–879) and keeps the original proportions. It is used on the login page, in the sidebar, on the not-found page and in Settings. |
+| Logo | Finalized set in `public/Mithren_Agro_Logos` (owner-supplied) | `Mithren_Agro_Pvt_Ltd_PNG.png` (transparent, 2048×1365) | Used unmodified via `src/config/brand.ts`. `BrandLogo` frames the artwork bounding box measured from the alpha channel (x 438–1610, y 425–928), keeping proportions and transparency. Used on the login page, sidebar, mobile drawer, not-found page and Settings. Favicon / touch icon: `Mithren_square.png`. The `*_landscape` and `*_square` variants have an opaque black background and are not used on the white UI. |
 | Favicon | `mithren-agro-customer/src/app/favicon.ico` | `src/app/favicon.ico` | Copied unmodified. |
 | Product images | `mithren-agro-customer/public/images/studio/products/*` | `public/images/products/*` | 10 fruit and vegetable studio images reused for demo listings. See `docs/IMAGE_CREDITS.md`. |
 | Light/dark logo variants | None exist in the storefront | — | Not created. The logo is only placed on white surfaces. |
@@ -45,7 +45,7 @@ for their fills.
 
 | Token | Storefront | Admin |
 |---|---|---|
-| Typeface | Poppins 400/500/600 (`next/font/google`) | Same |
+| Typeface | Montserrat (body, interface) and Playfair Display, variable fonts via `next/font/google` | Same families and loading options. Here Playfair is applied to h1/h2 page, section, card and dialog headings (`--font-heading`); Montserrat everywhere else. |
 | Page title | 26px mobile → 30px+ | 26px → 28px (`text-[1.625rem] sm:text-[1.75rem]`) |
 | Radii | cards `rounded-2xl`, panels `rounded-3xl`, controls pill | Same |
 | Card surface | `surface-card` utility (hairline + one soft green-tinted shadow) | Same utility, copied |

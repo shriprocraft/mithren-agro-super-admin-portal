@@ -8,7 +8,7 @@ There is no API, server action, database or external provider.
 ```
 src/
   app/
-    layout.tsx                 Root layout: Poppins font, metadata (noindex)
+    layout.tsx                 Root layout: Montserrat + Playfair Display, favicon, metadata (noindex)
     page.tsx                   "/" → redirect to /admin
     not-found.tsx              Branded 404 for unknown routes
     admin/login/page.tsx       Mock email/password sign-in

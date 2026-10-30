@@ -21,7 +21,7 @@ service, messaging provider or delivery system is connected. Simulated outcomes 
 "(demo)" or "(mock)" in the UI.
 
 It is a separate application from the customer storefront (`mithren-agro-customer`). It shares the
-storefront's brand identity: the official logo, the Modern Sage palette and the Poppins font (see
+storefront's brand identity: the finalized logo set (`public/Mithren_Agro_Logos`), the Modern Sage palette and the Montserrat / Playfair Display typography (see
 `docs/DESIGN_TOKENS.md`).
 
 ## Technology

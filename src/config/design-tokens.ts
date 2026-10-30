@@ -28,7 +28,7 @@ export const designTokens = {
     error: "#B42318",
     info: "#175CD3",
   },
-  fonts: { heading: "Poppins", body: "Poppins" },
+  fonts: { heading: "Playfair Display", body: "Montserrat" },
   radii: { sm: "0.5rem", md: "0.75rem", lg: "1rem", pill: "9999px" },
   /**
    * Admin spacing scale (Tailwind steps, 4px base). Shared components use these; pages should not add

@@ -57,7 +57,7 @@ export function SettingsView() {
           <form onSubmit={save} noValidate className="grid gap-4">
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-white p-4">
               <BrandLogo className="w-32" />
-              <p className="text-xs text-muted-foreground">Official Mithren Agro logo, shared with the customer storefront. Replacing the logo is not available in this demo.</p>
+              <p className="min-w-0 text-xs break-words text-muted-foreground">Finalized Mithren Agro logo (<code className="break-all">public/Mithren_Agro_Logos</code>). Replacing the logo is not available in this demo.</p>
             </div>
             <dl className="flex flex-wrap gap-2 text-xs" aria-label="Brand colours">
               {(["primary", "primaryHover", "accentGreen", "gold", "textPrimary"] as const).map((k) => (

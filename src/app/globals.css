@@ -4,8 +4,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-poppins);
-  --font-heading: var(--font-poppins);
+  --font-sans: var(--font-montserrat);
+  --font-heading: var(--font-playfair-display);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
@@ -93,6 +93,14 @@
   h2,
   h3 {
     text-wrap: balance;
+  }
+  /* Customer-app typography: Playfair Display for page, section, card and dialog headings (h1/h2);
+     Montserrat (font-sans, inherited by every control) for everything else, including the small h3
+     labels inside dense drawers and tables. Use the font-heading utility for non-heading titles. */
+  h1,
+  h2 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.005em;
   }
 }
 
